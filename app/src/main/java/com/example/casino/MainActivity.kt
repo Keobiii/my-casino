@@ -198,35 +198,3 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     }
 }
 
-
-//// System UI Controller
-//implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
-//
-//// Extended Icons
-//implementation("androidx.compose.material:material-icons-extended:1.7.8")
-//
-//// Navigation
-//implementation("androidx.navigation:navigation-compose:2.8.7")
-//
-////Pager
-//implementation ("com.google.accompanist:accompanist-pager:0.12.0")
-//
-//// Lottie
-//implementation("com.airbnb.android:lottie-compose:6.6.2")
-//
-//// Splash Screen
-//implementation("androidx.core:core-splashscreen:1.0.0")
-//
-//// ConstraintLayout Dependencies
-//implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0")
-//
-////    //Github
-////    implementation ("com.github.JhDroid:android-roulette-wheel-view:1.0.3")
-//
-////    // CameraX
-////    implementation("androidx.camera:camera-camera2:1.4.1")
-////    implementation("androidx.camera:camera-lifecycle:1.4.1")
-////    implementation("androidx.camera:camera-view:1.4.1")
-////
-////    // Zxing
-////    implementation("com.google.zxing:core:3.3.3")
