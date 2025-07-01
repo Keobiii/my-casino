@@ -54,7 +54,7 @@ import com.example.casino.ui.theme.pageBackground
 
 @Preview
 @Composable
-fun Login() {
+fun Register() {
     val context = LocalContext.current
     var emailField by remember { mutableStateOf("") }
     var passwordField by remember { mutableStateOf("") }
@@ -97,19 +97,17 @@ fun Login() {
                     isPassword = true
                 )
 
+                Spacer(modifier = Modifier.height(15.dp))
+
+                CustomOutlinedTextField(
+                    value = cpasswordField,
+                    onValueChange = { cpasswordField = it },
+                    label = "Confirm Password",
+                    isPassword = true
+                )
+
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text(
-                    "Forgot Password?",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.End,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Normal,
-                    fontStyle = FontStyle.Italic,
-                    color = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
 
 
                 Spacer(modifier = Modifier.height(25.dp))
@@ -127,7 +125,7 @@ fun Login() {
                         .height(50.dp)
                 ) {
                     Text(
-                        text = "Login",
+                        text = "Register",
                         textAlign = TextAlign.Center,
                         fontSize = 16.sp,
                         color = Color.White,
@@ -172,7 +170,7 @@ fun Login() {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    "You don't have an Account? Register",
+                    "You have already an Accountt? Login",
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily.SansSerif,
@@ -182,7 +180,7 @@ fun Login() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            val intent = Intent(context, RegisterActivity::class.java)
+                            val intent = Intent(context, LoginActivity::class.java)
                             context.startActivity(intent)
                             (context as? Activity)?.finish()
                         }
