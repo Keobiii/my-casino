@@ -1,8 +1,31 @@
 package com.example.casino.GameUI
 
-import android.media.MediaPlayer
+//import android.graphics.fonts.FontFamily
+//import android.media.MediaPlayer
+//import android.util.Log
+//import android.view.SoundEffectConstants
+//import androidx.compose.foundation.background
+//import androidx.compose.foundation.border
+//import androidx.compose.foundation.layout.Arrangement
+//import androidx.compose.foundation.layout.Row
+//import androidx.compose.foundation.layout.fillMaxHeight
+//import androidx.compose.foundation.layout.fillMaxSize
+//import androidx.compose.foundation.layout.fillMaxWidth
+//import androidx.compose.foundation.layout.padding
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.runtime.Composable
+//import androidx.compose.runtime.LaunchedEffect
+//import androidx.compose.runtime.getValue
+//import androidx.compose.runtime.mutableStateListOf
+//import androidx.compose.runtime.mutableStateOf
+//import androidx.compose.runtime.remember
+//import androidx.compose.runtime.setValue
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.draw.clip
+//import androidx.compose.ui.unit.dp
+//import androidx.constraintlayout.compose.ConstraintLayout
 import android.util.Log
-import android.view.SoundEffectConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -63,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import androidx.constraintlayout.compose.layoutId
 import com.example.casino.Dialog.CustomCardDialog
 import com.example.casino.R
 import com.example.casino.ui.theme.eggGray
@@ -135,9 +159,12 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
 
     // Trigger the dialog when conditions are met
     LaunchedEffect(bombCount, diamondCount) {
-        if (bombCount == 5 || diamondCount == 25) {
+        if (bombCount == 5 || diamondCount == 20) {
             showDialog = true
             enableClick = false
+
+//            Log.i("Diamond Count: ", diamondCount.toString())
+//            Log.i("Bomb Count: ", bombCount.toString())
         }
     }
 
@@ -487,8 +514,8 @@ fun BoxesUI(imageRes: Int, resetTrigger: Int, onReveal: (Int) -> Unit, enableCli
     var isClicked by remember(resetTrigger) { mutableStateOf(false) }
     var showNewImage by remember(resetTrigger) { mutableStateOf(false) }
 
-    val mContext  = LocalContext.current
-    val mMediaPlayer = MediaPlayer.create(mContext, R.raw.click_sound)
+//    val mContext  = LocalContext.current
+//    val mMediaPlayer = MediaPlayer.create(mContext, R.raw.click_sound)
 
     val scale by animateFloatAsState(
         targetValue = if (isClicked) 0.8f else 1f,

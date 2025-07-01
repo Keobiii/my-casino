@@ -70,13 +70,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = pageBackground
                 ) {
-                    if (isSplashFinished) {
-                        Navigation()
-                    } else {
-                        SplashScreen {
-                            isSplashFinished = true
-                        }
-                    }
+//                    if (isSplashFinished) {
+//                        Navigation()
+//                    } else {
+//                        SplashScreen {
+//                            isSplashFinished = true
+//                        }
+//                    }
+
+                    Navigation()
                 }
             }
         }
@@ -93,7 +95,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview
+
 @Composable
 fun Navigation() {
     val navController = rememberNavController()

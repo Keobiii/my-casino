@@ -1,5 +1,7 @@
 package com.example.casino.Profile
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +48,8 @@ import com.example.casino.ui.theme.pageBackground
 
 @Composable
 fun Profile(fontFamily: FontFamily) {
+    val context = LocalContext.current
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = pageBackground
@@ -306,7 +311,11 @@ fun Profile(fontFamily: FontFamily) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp)
-                        .clickable { },
+                        .clickable {
+                            val intent = Intent(context, LoginActivity::class.java)
+                            context.startActivity(intent)
+                            (context as? Activity)?.finish()
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
 
