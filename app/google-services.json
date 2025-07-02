@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "232551495751",
+    "project_id": "casino-game-63135",
+    "storage_bucket": "casino-game-63135.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232551495751:android:cddd185f7b95d41ee59962",
+        "android_client_info": {
+          "package_name": "com.example.casino"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "232551495751-oli9vvam3gic3vlka1m8hcifbkh8obmm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDU9BpUuuu0nkggAkFN_F1Uo-mmHUK4Dok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "232551495751-oli9vvam3gic3vlka1m8hcifbkh8obmm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

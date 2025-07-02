@@ -2,6 +2,7 @@ package com.example.casino.Profile
 
 import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,9 +29,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +54,9 @@ import com.example.casino.R
 import com.example.casino.elements.CustomOutlinedTextField
 import com.example.casino.ui.theme.eggWhite
 import com.example.casino.ui.theme.pageBackground
+import com.example.casino.utils.AuthResponse
+import com.example.casino.utils.AuthenticaionManager
+import kotlinx.coroutines.launch
 
 @Preview
 @Composable
@@ -58,7 +64,23 @@ fun Login() {
     val context = LocalContext.current
     var emailField by remember { mutableStateOf("") }
     var passwordField by remember { mutableStateOf("") }
-    var cpasswordField by remember { mutableStateOf("") }
+
+    // Auth Manager
+    val authManager = remember { AuthenticaionManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    var loginState by remember { mutableStateOf<AuthResponse?>(null) }
+
+    // Navigate to MainActivity when login succeeds
+    LaunchedEffect(loginState) {
+        if (loginState is AuthResponse.Success) {
+            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+            context.startActivity(Intent(context, MainActivity::class.java))
+            (context as? Activity)?.finish()
+        } else if (loginState is AuthResponse.Error) {
+            val message = (loginState as AuthResponse.Error).messsage
+            Toast.makeText(context, "Error: $message", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -116,9 +138,15 @@ fun Login() {
 
                 Button(
                     onClick = {
-                        val intent = Intent(context, MainActivity::class.java)
-                        context.startActivity(intent)
-                        (context as? Activity)?.finish()
+                        if (emailField.isNotBlank() && passwordField.isNotBlank()) {
+                            coroutineScope.launch {
+                                authManager.loginWithEmail(emailField, passwordField).collect {
+                                    loginState = it
+                                }
+                            }
+                        } else {
+                            Toast.makeText(context, "Fill up all fields", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
@@ -137,37 +165,37 @@ fun Login() {
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-//                Button(
-//                    onClick = {},
-//                    colors = ButtonDefaults.buttonColors(containerColor = eggWhite),
-//                    shape = RoundedCornerShape(10.dp),
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(50.dp)
-//                ) {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.Center,
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//
-//                        Image(
-//                            painter = painterResource(id = R.drawable.google_icon),
-//                            contentDescription = "Google Icon",
-//                            modifier = Modifier
-//                                .height(25.dp)
-//                                .padding(end = 10.dp)
-//                        )
-//
-//                        Text(
-//                            text = "Continue with Google",
-//                            textAlign = TextAlign.Center,
-//                            fontSize = 16.sp,
-//                            color = Color.Black,
-//                            fontWeight = FontWeight.Bold,
-//                        )
-//                    }
-//                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = eggWhite),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Image(
+                            painter = painterResource(id = R.drawable.google_icon),
+                            contentDescription = "Google Icon",
+                            modifier = Modifier
+                                .height(25.dp)
+                                .padding(end = 10.dp)
+                        )
+
+                        Text(
+                            text = "Continue with Google",
+                            textAlign = TextAlign.Center,
+                            fontSize = 16.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -187,34 +215,6 @@ fun Login() {
                             (context as? Activity)?.finish()
                         }
                 )
-
-//                Button(
-//                    onClick = {},
-//                    colors = ButtonDefaults.buttonColors(containerColor = eggWhite),
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .clip(RoundedCornerShape(20.dp))
-//                ) {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.Center,
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//
-//                        Image(
-//                            painter = painterResource(id = R.drawable.facebook_icon),
-//                            contentDescription = "Facebook Icon",
-//                            modifier = Modifier.height(25.dp).padding(end = 10.dp)
-//                        )
-//
-//                        Text(
-//                            text = "Continue with Facebook",
-//                            textAlign = TextAlign.Center,
-//                            color = Color.Black,
-//                            fontWeight = FontWeight.Bold,
-//                        )
-//                    }
-//                }
 
             }
         }

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -92,4 +93,17 @@ dependencies {
 //
 //    // Zxing
 //    implementation("com.google.zxing:core:3.3.3")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+    implementation("com.google.firebase:firebase-auth:23.2.1")
+
+    // Google play service
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
+    // Credential Manager
+    val credentialsManagerVersion = "1.5.0-alpha05"
+    implementation("androidx.credentials:credentials:$credentialsManagerVersion")
+    implementation("androidx.credentials:credentials-play-services-auth:$credentialsManagerVersion")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }
