@@ -1,6 +1,7 @@
 package com.example.casino.presentation.ui.Profile
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -24,15 +25,18 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,13 +47,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casino.R
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,6 +63,9 @@ fun Profile(fontFamily: FontFamily) {
     val coroutineScope = rememberCoroutineScope()
     val dataStoreManager = DataStoreManager(context)
     val uidFlow = dataStoreManager.getUserUid()
+
+    val dataStoreManager2 = remember { DataStoreManager(context) }
+    val uid by dataStoreManager2.getUserUid().collectAsState(initial = null)
 
     LaunchedEffect(Unit) {
         uidFlow.collect { uid ->
@@ -79,317 +87,365 @@ fun Profile(fontFamily: FontFamily) {
                 .padding(10.dp)
                 .background(pageBackground)
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().height(260.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            if (uid != null) userLoggedInUI(fontFamily, coroutineScope, context, dataStoreManager) else userVisitorUI(fontFamily, context)
+        }
+    }
+}
+
+@Composable
+fun userVisitorUI(
+    fontFamily: FontFamily,
+    context: Context
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Button(
+            onClick = {
+                val intent = Intent(context, LoginActivity::class.java)
+                context.startActivity(intent)
+                (context as? Activity)?.finish()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onBackground),
+        ) {
+            Text(
+                text = "Login First",
+                textAlign = TextAlign.Center,
+                fontSize = 16.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontFamily = fontFamily
+            )
+        }
+    }
+
+}
+
+@Composable
+fun userLoggedInUI(
+    fontFamily: FontFamily,
+    coroutineScope: CoroutineScope,
+    context: Context,
+    dataStoreManager: DataStoreManager
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().height(260.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
 //                ProfileBackground()
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(50.dp))
-                        .background(MaterialTheme.colorScheme.onBackground)
-                        .padding(4.dp)
-                ) {
-                    Image(
-                        modifier = Modifier
-                            .size(90.dp)
-                            .clip(CircleShape),
-                        painter = painterResource(id = R.drawable.nobita),
-                        contentDescription = "User Icon"
-                    )
-                }
-                Text(
-                    modifier = Modifier.padding(top = 15.dp),
-                    text = "Keobi Keribu",
-                    fontSize = 18.sp,
-                    color = Color.White,
-                    fontFamily = fontFamily,
-                    fontWeight = FontWeight.Bold
+        Box(
+            modifier = Modifier.clip(RoundedCornerShape(50.dp))
+                .background(MaterialTheme.colorScheme.onBackground)
+                .padding(4.dp)
+        ) {
+            Image(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(CircleShape),
+                painter = painterResource(id = R.drawable.nobita),
+                contentDescription = "User Icon"
+            )
+        }
+        Text(
+            modifier = Modifier.padding(top = 15.dp),
+            text = "Keobi Keribu",
+            fontSize = 18.sp,
+            color = Color.White,
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = "Player",
+            fontSize = 14.sp,
+            color = Color.White,
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Normal
+        )
+
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        // Profile
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable { },
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Row(
+                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    imageVector = Icons.Rounded.Person,
+                    contentDescription = "Person Icon",
+                    tint = Color.White
                 )
 
+
                 Text(
-                    text = "Player",
-                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 25.dp),
+                    text = "Language",
                     color = Color.White,
                     fontFamily = fontFamily,
-                    fontWeight = FontWeight.Normal
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
                 )
-
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.Start
+                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
             ) {
-                // Profile
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clickable { },
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
 
-                    Row(
-                        modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(30.dp),
-                            imageVector = Icons.Rounded.Person,
-                            contentDescription = "Person Icon",
-                            tint = Color.White
-                        )
-
-
-                        Text(
-                            modifier = Modifier.padding(start = 25.dp),
-                            text = "Language",
-                            color = Color.White,
-                            fontFamily = fontFamily,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = "Arrow Icon",
-                            tint = Color.White
-                        )
-
-                    }
-                }
-
-                // Email
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clickable { },
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Row(
-                        modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(30.dp),
-                            imageVector = Icons.Rounded.Email,
-                            contentDescription = "Email Icon",
-                            tint = Color.White
-                        )
-
-
-                        Text(
-                            modifier = Modifier.padding(start = 25.dp),
-                            text = "Linked Account",
-                            color = Color.White,
-                            fontFamily = fontFamily,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                        )
-
-
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = "Arrow Icon",
-                            tint = Color.White
-                        )
-
-                    }
-                }
-
-                // Clear Cache
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clickable { },
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Row(
-                        modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(30.dp),
-                            imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = "Cache Icon",
-                            tint = Color.White
-                        )
-
-
-                        Text(
-                            modifier = Modifier.padding(start = 25.dp),
-                            text = "Clear Cache",
-                            color = Color.White,
-                            fontFamily = fontFamily,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                        )
-
-
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = "Arrow Icon",
-                            tint = Color.White
-                        )
-
-                    }
-                }
-
-                // Clear History
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clickable { },
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Row(
-                        modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(30.dp),
-                            imageVector = Icons.Rounded.History,
-                            contentDescription = "History Icon",
-                            tint = Color.White
-                        )
-
-
-                        Text(
-                            modifier = Modifier.padding(start = 25.dp),
-                            text = "Clear History",
-                            color = Color.White,
-                            fontFamily = fontFamily,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                        )
-
-
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = "Arrow Icon",
-                            tint = Color.White
-                        )
-
-                    }
-                }
-
-                // Logout
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .clickable {
-                            coroutineScope.launch {
-                                dataStoreManager.clearUID()
-
-                                val intent = Intent(context, LoginActivity::class.java)
-                                context.startActivity(intent)
-                                (context as? Activity)?.finish()
-                            }
-                        },
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Row(
-                        modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(30.dp),
-                            imageVector = Icons.AutoMirrored.Rounded.Logout,
-                            contentDescription = "Logout Icon",
-                            tint = Color.White
-                        )
-
-
-                        Text(
-                            modifier = Modifier.padding(start = 25.dp),
-                            text = "Logout",
-                            color = Color.White,
-                            fontFamily = fontFamily,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.End
-                    ) {
-
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = "Arrow Icon",
-                            tint = Color.White
-                        )
-
-                    }
-                }
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Arrow Icon",
+                    tint = Color.White
+                )
 
             }
         }
+
+        // Email
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable { },
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Row(
+                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    imageVector = Icons.Rounded.Email,
+                    contentDescription = "Email Icon",
+                    tint = Color.White
+                )
+
+
+                Text(
+                    modifier = Modifier.padding(start = 25.dp),
+                    text = "Linked Account",
+                    color = Color.White,
+                    fontFamily = fontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                )
+
+
+            }
+
+            Column(
+                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Arrow Icon",
+                    tint = Color.White
+                )
+
+            }
+        }
+
+        // Clear Cache
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable { },
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Row(
+                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    imageVector = Icons.Rounded.DeleteOutline,
+                    contentDescription = "Cache Icon",
+                    tint = Color.White
+                )
+
+
+                Text(
+                    modifier = Modifier.padding(start = 25.dp),
+                    text = "Clear Cache",
+                    color = Color.White,
+                    fontFamily = fontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                )
+
+
+            }
+
+            Column(
+                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Arrow Icon",
+                    tint = Color.White
+                )
+
+            }
+        }
+
+        // Clear History
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable { },
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Row(
+                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    imageVector = Icons.Rounded.History,
+                    contentDescription = "History Icon",
+                    tint = Color.White
+                )
+
+
+                Text(
+                    modifier = Modifier.padding(start = 25.dp),
+                    text = "Clear History",
+                    color = Color.White,
+                    fontFamily = fontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                )
+
+
+            }
+
+            Column(
+                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Arrow Icon",
+                    tint = Color.White
+                )
+
+            }
+        }
+
+        // Logout
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clickable {
+                    coroutineScope.launch {
+                        dataStoreManager.clearUID()
+
+                        val intent = Intent(context, LoginActivity::class.java)
+                        context.startActivity(intent)
+                        (context as? Activity)?.finish()
+                    }
+                },
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Row(
+                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    imageVector = Icons.AutoMirrored.Rounded.Logout,
+                    contentDescription = "Logout Icon",
+                    tint = Color.White
+                )
+
+
+                Text(
+                    modifier = Modifier.padding(start = 25.dp),
+                    text = "Logout",
+                    color = Color.White,
+                    fontFamily = fontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+            ) {
+
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Arrow Icon",
+                    tint = Color.White
+                )
+
+            }
+        }
+
     }
 }
 
 @Preview
 @Composable
 fun ProfileBackground() {
+
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
