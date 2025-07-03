@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,10 +22,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,13 +37,18 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.casino.data.repository.UserRepositoryImpl
+import com.example.casino.domain.usecase.ObserveUserDataUseCase
 import com.example.casino.presentation.ui.Home.GameUI
 import com.example.casino.presentation.ui.Home.Home
 import com.example.casino.utils.TopNavigationBar
 import com.example.casino.presentation.ui.Profile.Profile
 import com.example.casino.presentation.ui.TopUp.TopUp
+import com.example.casino.presentation.viewmodel.UserViewModel
+import com.example.casino.presentation.viewmodel.UserViewModelFactory
 import com.example.casino.ui.theme.CasinoTheme
 import com.example.casino.ui.theme.pageBackground
+import com.example.casino.utils.DataStoreManager
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
 
@@ -86,7 +94,24 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Navigation() {
+    val context = LocalContext.current
     val navController = rememberNavController()
+    val dataStoreManager = remember { DataStoreManager(context) }
+
+    // Get UID from DataStore
+    val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
+
+    // Initialize ViewModel
+    val userViewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(
+            ObserveUserDataUseCase(UserRepositoryImpl())
+        )
+    )
+
+    // Start observing user data from Firebase
+    LaunchedEffect(uid) {
+        uid?.let { userViewModel.startObservingUser(it) }
+    }
 
     val fontFamily = FontFamily(
         Font(R.font.lexend_thin, FontWeight.Thin),
@@ -100,12 +125,16 @@ fun Navigation() {
 
     Scaffold(
         topBar = {
-            TopNavigationBar(navController = navController, fontFamily = fontFamily)
+            TopNavigationBar(
+                navController = navController,
+                fontFamily = fontFamily,
+                userViewModel = userViewModel
+            )
         }
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = "home",  // Start with Home after Splash
+            startDestination = "home",
             modifier = Modifier.padding(padding)
         ) {
             composable("home") { Home(navController, fontFamily) }
@@ -120,10 +149,8 @@ fun Navigation() {
             ) { backStackEntry ->
                 val index = backStackEntry.arguments?.getInt("index") ?: 0
                 val title = backStackEntry.arguments?.getString("title") ?: "Unknown"
-
                 GameUI(index, fontFamily, title)
             }
-
         }
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casino.R
+import com.example.casino.presentation.viewmodel.UserViewModel
 import com.example.casino.ui.theme.blueViolet
 import com.example.casino.ui.theme.pageBackground
 
@@ -45,12 +47,15 @@ import com.example.casino.ui.theme.pageBackground
 @Composable
 fun TopNavigationBar(
     navController: NavController,
-    fontFamily: FontFamily
+    fontFamily: FontFamily,
+    userViewModel: UserViewModel
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.coin))
+
+    val user by userViewModel.user.observeAsState()
 
     TopAppBar(
         title = { Spacer(modifier = Modifier) },
@@ -109,7 +114,7 @@ fun TopNavigationBar(
                         ) {
 
                             Text(
-                                text = "$ 1,500.00",
+                                text = user?.balance?.toString() ?: "---",
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = fontFamily,
