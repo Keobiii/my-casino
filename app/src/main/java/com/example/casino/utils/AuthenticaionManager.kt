@@ -1,6 +1,7 @@
 package com.example.casino.utils
 
 import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -30,7 +31,7 @@ class AuthenticaionManager(val context: Context) {
                         trySend(AuthResponse.Success)
                         close()
                     } else {
-                        trySend(AuthResponse.Error(messsage = task.exception?.message ?: "Unknown Error"))
+                        trySend(AuthResponse.Error(message = task.exception?.message ?: "Unknown Error"))
                         close()
                     }
                 }
@@ -51,7 +52,7 @@ class AuthenticaionManager(val context: Context) {
                         trySend(AuthResponse.Success)
                         close()
                     } else {
-                        trySend(AuthResponse.Error(messsage = task.exception?.message ?: "Unknown Error"))
+                        trySend(AuthResponse.Error(message = task.exception?.message ?: "Unknown Error"))
                         close()
                     }
                 }
@@ -73,56 +74,6 @@ class AuthenticaionManager(val context: Context) {
         return digest.fold("") { str, it -> str + "%02x".format(it)}
     }
 
-//    fun signInWithGoogle(): Flow<AuthResponse> = callbackFlow {
-//        val googleIdOption = GetGoogleIdOption.Builder()
-//            .setFilterByAuthorizedAccounts(false)
-//            .setServerClientId(context.getString(R.string.web_client_id))
-//            .setAutoSelectEnabled(false)
-//            .setNonce(createNonce())
-//            .build()
-//
-//
-//        val request = GetCredentialRequest.Builder()
-//            .addCredentialOption(googleIdOption)
-//            .build()
-//
-//        try {
-//            val credentialManager = CredentialManager.create(context)
-//            val result = credentialManager.getCredential(context = context, request = request )
-//
-//            val credential = result.credential
-//
-//            if (credential is CustomCredential) {
-//                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL) {
-//                    try {
-//                        val googleIdTokenCredential = GoogleIdTokenCredential
-//                            .createFrom(credential.data)
-//
-//                        val firebaseCredential = GoogleAuthProvider
-//                            .getCredential(
-//                                googleIdTokenCredential.idToken,
-//                                null
-//                            )
-//
-//                        auth.signInWithCredential(firebaseCredential)
-//                            .addOnCompleteListener {
-//                                if (it.isSuccessful) {
-//                                    trySend(AuthResponse.Success)
-//                                } else {
-//                                    trySend(AuthResponse.Error(messsage = it.exception?.message ?: ""))
-//                                }
-//                            }
-//                    } catch (e: GoogleIdTokenParsingException) {
-//                        trySend(AuthResponse.Error(messsage = e.message ?: ""))
-//                    }
-//                }
-//            }
-//        } catch (e: Exception) {
-//            trySend(AuthResponse.Error(e.message ?: "Google sign-in failed"))
-//        }
-//
-//        awaitClose()
-//    }
 
     fun signInWithGoogle(): Flow<AuthResponse> = callbackFlow {
         val googleIdOption = GetGoogleIdOption.Builder()
@@ -141,8 +92,10 @@ class AuthenticaionManager(val context: Context) {
             val result = credentialManager.getCredential(context = context, request = request)
             val credential = result.credential
 
+            Log.d("CredentialDebug", "Type: ${credential.type}")
+
             if (credential is CustomCredential &&
-                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL) {
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
 
                 try {
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
@@ -193,5 +146,5 @@ class AuthenticaionManager(val context: Context) {
 
 interface AuthResponse {
     data object Success: AuthResponse
-    data class Error(val messsage: String) : AuthResponse
+    data class Error(val message: String) : AuthResponse
 }
