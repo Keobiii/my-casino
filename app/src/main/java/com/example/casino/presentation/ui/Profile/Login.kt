@@ -52,7 +52,10 @@ import com.example.casino.ui.theme.eggWhite
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.AuthResponse
 import com.example.casino.utils.AuthenticaionManager
+import com.example.casino.utils.DataStoreManager
 import com.example.casino.utils.ErrorMessageMapper
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 @Composable
@@ -70,9 +73,19 @@ fun Login() {
     LaunchedEffect(loginState) {
         when (val state = loginState) {
             is AuthResponse.Success -> {
-                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                context.startActivity(Intent(context, MainActivity::class.java))
-                (context as? Activity)?.finish()
+
+                // Data Store
+                val uid = Firebase.auth.currentUser?.uid
+                if (uid != null) {
+                    val dataStoreManager = DataStoreManager(context)
+                    dataStoreManager.saveUserUid(uid)
+
+                    Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                    context.startActivity(Intent(context, MainActivity::class.java))
+                    (context as? Activity)?.finish()
+                }
+
+
             }
             is AuthResponse.Error -> {
                 val message = ErrorMessageMapper.map(state.message)

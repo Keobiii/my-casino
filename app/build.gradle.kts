@@ -107,4 +107,7 @@ dependencies {
     implementation("androidx.credentials:credentials:$credentialsManagerVersion")
     implementation("androidx.credentials:credentials-play-services-auth:$credentialsManagerVersion")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    // Data Store
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
 }

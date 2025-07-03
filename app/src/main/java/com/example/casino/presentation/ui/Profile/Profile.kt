@@ -2,6 +2,7 @@ package com.example.casino.presentation.ui.Profile
 
 import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,10 +48,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casino.R
 import com.example.casino.ui.theme.pageBackground
+import com.example.casino.utils.DataStoreManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 @Composable
 fun Profile(fontFamily: FontFamily) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val dataStoreManager = DataStoreManager(context)
+    val uidFlow = dataStoreManager.getUserUid()
+
+    LaunchedEffect(Unit) {
+        uidFlow.collect { uid ->
+            if (uid != null) {
+                Toast.makeText(context, "USER LOGGED IN: $uid", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "USER LOGGED IN: null", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -312,9 +331,13 @@ fun Profile(fontFamily: FontFamily) {
                         .fillMaxWidth()
                         .height(60.dp)
                         .clickable {
-                            val intent = Intent(context, LoginActivity::class.java)
-                            context.startActivity(intent)
-                            (context as? Activity)?.finish()
+                            coroutineScope.launch {
+                                dataStoreManager.clearUID()
+
+                                val intent = Intent(context, LoginActivity::class.java)
+                                context.startActivity(intent)
+                                (context as? Activity)?.finish()
+                            }
                         },
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
