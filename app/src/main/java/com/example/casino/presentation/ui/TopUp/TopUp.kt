@@ -1,5 +1,6 @@
 package com.example.casino.presentation.ui.TopUp
 
+import android.service.autofill.OnClickAction
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +35,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +48,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -52,62 +56,87 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casino.presentation.ui.Home.getGradient
 import com.example.casino.R
 import com.example.casino.data.model.Transaction
+import com.example.casino.data.repository.UserRepositoryImpl
+import com.example.casino.domain.usecase.ObserveUserDataUseCase
+import com.example.casino.domain.usecase.UpdateUserFieldUseCase
+import com.example.casino.presentation.viewmodel.BalanceViewModel
+import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
 import com.example.casino.ui.theme.ch4EndColor
 import com.example.casino.ui.theme.ch4StartColor
 import com.example.casino.ui.theme.eggGray
 import com.example.casino.ui.theme.eggWhite
 import com.example.casino.ui.theme.pageBackground
+import com.example.casino.utils.DataStoreManager
 
 val transactions = listOf(
     Transaction(
         type = "cash_in",
         date = "11/12/25",
         amount = 24.25f,
-        icon = Icons.Default.Add
+        icon = R.drawable.coin_cash_in
     ),
 
     Transaction(
         type = "withdraw",
         date = "11/12/25",
         amount = 24.25f,
-        icon = Icons.Default.CreditCard
+        icon = R.drawable.coin_cash_out
     ),
 
     Transaction(
         type = "withdraw",
         date = "11/12/25",
         amount = 24.25f,
-        icon = Icons.Default.CreditCard
+        icon = R.drawable.coin_cash_out
     ),
 
     Transaction(
         type = "cash_in",
         date = "11/12/25",
         amount = 24.25f,
-        icon = Icons.Default.CreditCard
+        icon = R.drawable.coin_cash_in
     ),
 
     Transaction(
         type = "cash_in",
         date = "11/12/25",
         amount = 24.25f,
-        icon = Icons.Default.CreditCard
+        icon = R.drawable.coin_cash_in
     ),
 
     Transaction(
         type = "cash_in",
         date = "11/12/25",
         amount = 24.25f,
-        icon = Icons.Default.CreditCard
+        icon = R.drawable.coin_cash_in
     ),
 )
 
 
 @Composable
 fun TopUp(fontFamily: FontFamily) {
+    val context = LocalContext.current
+    val dataStoreManager = remember { DataStoreManager(context) }
+
+    val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
+
+    val repository = UserRepositoryImpl()
+    val balanceViewModel: BalanceViewModel = viewModel(
+        factory = BalanceViewModelFactory(
+            observeUserDataUseCase = ObserveUserDataUseCase(repository),
+            updateUserFieldUseCase = UpdateUserFieldUseCase(repository)
+        )
+    )
+
+    // 👇 Start observing user once UID is available
+    LaunchedEffect(uid) {
+        uid?.let { balanceViewModel.startObservingUser(it) }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = pageBackground
@@ -121,7 +150,7 @@ fun TopUp(fontFamily: FontFamily) {
         ) {
             BalanceUI(fontFamily)
             Spacer(modifier = Modifier.height(20.dp))
-            QuickAction(fontFamily)
+            QuickAction(fontFamily, balanceViewModel, uid)
             Spacer(modifier = Modifier.height(20.dp))
             History(fontFamily)
         }
@@ -223,7 +252,11 @@ fun BalanceUI(fontFamily: FontFamily) {
 
 
 @Composable
-fun QuickAction(fontFamily: FontFamily) {
+fun QuickAction(
+    fontFamily: FontFamily,
+    balanceViewModel: BalanceViewModel,
+    uid: String?
+) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -240,13 +273,17 @@ fun QuickAction(fontFamily: FontFamily) {
                 .fillMaxWidth()
                 .padding(top = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceAround
         ) {
 
-            ActionsIU(fontFamily, Icons.Default.Add, "Cash In")
-            ActionsIU(fontFamily, Icons.Default.Payment, "Cash Out")
-            ActionsIU(fontFamily, Icons.Default.CurrencyExchange, "History")
-            ActionsIU(fontFamily, Icons.Default.QrCodeScanner, "Scan")
+            ActionsIU(fontFamily, R.drawable.coin_cash_in, "Cash In", {
+                uid?.let { balanceViewModel.updateUserBalance(it, 100) }
+            })
+            ActionsIU(fontFamily, R.drawable.coin_cash_out, "Cash Out", {
+                uid?.let { balanceViewModel.updateUserBalance(it, -10) }
+            })
+//            ActionsIU(fontFamily, Icons.Default.CurrencyExchange, "History", {})
+//            ActionsIU(fontFamily, Icons.Default.QrCodeScanner, "Scan", {})
 
         }
     }
@@ -255,8 +292,9 @@ fun QuickAction(fontFamily: FontFamily) {
 @Composable
 fun ActionsIU(
     fontFamily: FontFamily,
-    actionIcon: ImageVector,
-    actionTitle: String
+    icon: Int,
+    actionTitle: String,
+    onClick: () -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
@@ -264,17 +302,18 @@ fun ActionsIU(
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(50.dp))
+                .clip(RoundedCornerShape(45.dp))
                 .background(MaterialTheme.colorScheme.background)
-                .padding(5.dp)
+                .clickable { onClick() }
+                .padding(10.dp)
         ) {
-            Icon(
-                modifier = Modifier.size(25.dp),
-                imageVector = actionIcon,
+            Image(
+                painter = painterResource(id = icon),
                 contentDescription = actionTitle,
-                tint = MaterialTheme.colorScheme.onBackground
+                modifier = Modifier.size(30.dp)
             )
         }
+
 
         Text(
             modifier = Modifier.padding(top = 5.dp),
@@ -370,18 +409,18 @@ fun HistoryList(index: Int, fontFamily: FontFamily) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.background)
                         .padding(4.dp)
                 ) {
-
-                    Icon(
-                        modifier = Modifier.size(25.dp),
-                        imageVector = transaction.icon,
+                    Image(
+                        painter = painterResource(id = transaction.icon),
                         contentDescription = transaction.type,
-                        tint = MaterialTheme.colorScheme.onBackground
+                        modifier = Modifier.size(25.dp),
+
                     )
                 }
 

@@ -39,13 +39,14 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casino.data.repository.UserRepositoryImpl
 import com.example.casino.domain.usecase.ObserveUserDataUseCase
+import com.example.casino.domain.usecase.UpdateUserFieldUseCase
 import com.example.casino.presentation.ui.Home.GameUI
 import com.example.casino.presentation.ui.Home.Home
 import com.example.casino.utils.TopNavigationBar
 import com.example.casino.presentation.ui.Profile.Profile
 import com.example.casino.presentation.ui.TopUp.TopUp
-import com.example.casino.presentation.viewmodel.UserViewModel
-import com.example.casino.presentation.viewmodel.UserViewModelFactory
+import com.example.casino.presentation.viewmodel.BalanceViewModel
+import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
 import com.example.casino.ui.theme.CasinoTheme
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
@@ -102,15 +103,17 @@ fun Navigation() {
     val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
 
     // Initialize ViewModel
-    val userViewModel: UserViewModel = viewModel(
-        factory = UserViewModelFactory(
-            ObserveUserDataUseCase(UserRepositoryImpl())
+    val repository = UserRepositoryImpl()
+    val balanceViewModel: BalanceViewModel = viewModel(
+        factory = BalanceViewModelFactory(
+            observeUserDataUseCase = ObserveUserDataUseCase(repository),
+            updateUserFieldUseCase = UpdateUserFieldUseCase(repository)
         )
     )
 
     // Start observing user data from Firebase
     LaunchedEffect(uid) {
-        uid?.let { userViewModel.startObservingUser(it) }
+        uid?.let { balanceViewModel.startObservingUser(it) }
     }
 
     val fontFamily = FontFamily(
@@ -128,7 +131,7 @@ fun Navigation() {
             TopNavigationBar(
                 navController = navController,
                 fontFamily = fontFamily,
-                userViewModel = userViewModel
+                balanceViewModel = balanceViewModel
             )
         }
     ) { padding ->

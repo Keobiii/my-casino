@@ -39,7 +39,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casino.R
-import com.example.casino.presentation.viewmodel.UserViewModel
+import com.example.casino.presentation.viewmodel.BalanceViewModel
 import com.example.casino.ui.theme.blueViolet
 import com.example.casino.ui.theme.pageBackground
 
@@ -48,14 +48,14 @@ import com.example.casino.ui.theme.pageBackground
 fun TopNavigationBar(
     navController: NavController,
     fontFamily: FontFamily,
-    userViewModel: UserViewModel
+    balanceViewModel: BalanceViewModel
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.coin))
 
-    val user by userViewModel.user.observeAsState()
+    val user by balanceViewModel.user.observeAsState()
 
     TopAppBar(
         title = { Spacer(modifier = Modifier) },

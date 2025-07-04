@@ -35,8 +35,6 @@ class UserRepositoryImpl : UserRepository {
             }
     }
 
-
-
     override fun observeUserData(uid: String): LiveData<User> {
         val liveData = MutableLiveData<User>()
         database.child("users").child(uid)
@@ -51,5 +49,16 @@ class UserRepositoryImpl : UserRepository {
                 }
             })
         return liveData
+    }
+
+    override fun updateUserField(
+        uid: String,
+        updates: Map<String, Any>,
+        onResult: (Boolean) -> Unit
+    ) {
+        database.child("users").child(uid).updateChildren(updates)
+            .addOnCompleteListener { task ->
+                onResult(task.isSuccessful)
+            }
     }
 }
