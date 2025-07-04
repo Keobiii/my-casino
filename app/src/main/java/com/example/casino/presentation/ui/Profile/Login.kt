@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,8 +55,10 @@ import com.example.casino.utils.AuthResponse
 import com.example.casino.utils.AuthenticaionManager
 import com.example.casino.utils.DataStoreManager
 import com.example.casino.utils.ErrorMessageMapper
+import com.example.casino.utils.UiState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,29 +75,32 @@ fun Login() {
 
     LaunchedEffect(loginState) {
         when (val state = loginState) {
-            is AuthResponse.Success -> {
-
-                // Data Store
+            is UiState.Success -> {
                 val uid = Firebase.auth.currentUser?.uid
-                if (uid != null) {
-                    val dataStoreManager = DataStoreManager(context)
-                    dataStoreManager.saveUserUid(uid)
-
+                uid?.let {
+                    DataStoreManager(context).saveUserUid(it)
                     Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
                     context.startActivity(Intent(context, MainActivity::class.java))
                     (context as? Activity)?.finish()
                 }
-
-
             }
-            is AuthResponse.Error -> {
-                val message = ErrorMessageMapper.map(state.message)
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+            is UiState.Error -> {
+                Toast.makeText(context, ErrorMessageMapper.map(state.message), Toast.LENGTH_SHORT).show()
             }
-            null -> {}
+
+//            is UiState.Loading -> {
+//                Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
+//            }
+
+            else -> {}
         }
 
-        viewModel.resetLoginState()
+        // Delay resting state to see the loading
+        if (loginState !is UiState.Loading) {
+            delay(1000)
+            viewModel.resetLoginState()
+        }
     }
 
 
@@ -229,6 +235,17 @@ fun Login() {
                         }
                 )
 
+            }
+        }
+
+        if (loginState is UiState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }
