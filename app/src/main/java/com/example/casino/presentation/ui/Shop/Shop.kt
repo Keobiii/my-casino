@@ -108,7 +108,6 @@ fun Shop(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(16.dp)
             ) { index ->
 
                 tabItems[index].page()

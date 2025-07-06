@@ -82,7 +82,7 @@ fun History(
     fontFamily: FontFamily
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(16.dp)
     ) {
         Box(
             modifier = Modifier

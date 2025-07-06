@@ -55,7 +55,7 @@ fun TopNavigationBar(
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.coin))
 
-    val user by balanceViewModel.user.observeAsState()
+    val userState = balanceViewModel.userState
 
     TopAppBar(
         title = { Spacer(modifier = Modifier) },
@@ -113,8 +113,15 @@ fun TopNavigationBar(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
 
+                            val balanceText = when (userState) {
+                                is UiState.Loading -> "Loading..."
+                                is UiState.Success -> "${userState.data.balance}"
+                                is UiState.Error -> "Error"
+                                else -> "---"
+                            }
+
                             Text(
-                                text = user?.balance?.toString() ?: "---",
+                                text = balanceText,
                                 color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = fontFamily,

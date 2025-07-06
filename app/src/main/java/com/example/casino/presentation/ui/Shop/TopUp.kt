@@ -1,5 +1,6 @@
 package com.example.casino.presentation.ui.Shop
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -66,6 +69,8 @@ import com.example.casino.ui.theme.ch4StartColor
 import com.example.casino.ui.theme.darkPageBackground
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
+import com.example.casino.utils.UiState
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -74,7 +79,6 @@ fun TopUp(
 ) {
     val context = LocalContext.current
     val dataStoreManager = remember { DataStoreManager(context) }
-
     val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
 
     val repository = UserRepositoryImpl()
@@ -85,212 +89,73 @@ fun TopUp(
         )
     )
 
-    // 👇 Start observing user once UID is available
     LaunchedEffect(uid) {
         uid?.let { balanceViewModel.startObservingUser(it) }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = pageBackground
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = "Top Up",
-                    fontSize = 18.sp,
-                    fontFamily = fontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+    val updateState = balanceViewModel.updateBalanceState
+
+    // Handle update success or error
+    LaunchedEffect(updateState) {
+        when (updateState) {
+            is UiState.Success -> {
+                Toast.makeText(context, "Balance updated!", Toast.LENGTH_SHORT).show()
+                delay(5000)
+                balanceViewModel.resetUpdateBalanceState()
             }
-//            BalanceUI(fontFamily)
-//            Spacer(modifier = Modifier.height(20.dp))
-//            QuickAction(fontFamily, balanceViewModel, uid)
-//            Spacer(modifier = Modifier.height(20.dp))
-            ShopUI(fontFamily, balanceViewModel, uid)
+            is UiState.Error -> {
+                Toast.makeText(context, updateState.message, Toast.LENGTH_SHORT).show()
+                delay(5000)
+                balanceViewModel.resetUpdateBalanceState()
+            }
+            else -> {}
         }
     }
-}
 
-fun getGradient(
-    startColor: Color,
-    endColor: Color,
-): Brush {
-    return Brush.linearGradient(
-        colors = listOf(startColor, endColor)
-    )
-}
-
-@Composable
-fun BalanceUI(fontFamily: FontFamily) {
-    var isVisible by remember { mutableStateOf(false) }
-
-    Card(
+    Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(25.dp)),
-        elevation = CardDefaults.cardElevation(8.dp),
+            .fillMaxSize()
+            .background(pageBackground)
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth().height(160.dp)
-                .background(getGradient(ch4StartColor, ch4EndColor))
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Background Image
-                Image(
-                    painter = painterResource(id = R.drawable.ch4),
-                    contentDescription = "Character Png",
-                    contentScale = ContentScale.Inside,
+                Box(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .align(Alignment.CenterEnd)
-                        .width(130.dp)
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    horizontalAlignment = Alignment.End
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Account Balance",
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            fontFamily = fontFamily
-                        )
-
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Setting Icon",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
                     Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = if (isVisible) "$ 1,500.00" else "$ ****",
-                        fontSize = 24.sp,
+                        text = "Top Up",
+                        fontSize = 18.sp,
+                        fontFamily = fontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Start,
-                        fontFamily = fontFamily
+                        color = Color.White
                     )
+                }
 
-                    Icon(
-                        modifier = Modifier.size(20.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                isVisible = !isVisible
-                            },
-                        imageVector = if (isVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Eye Icon",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
+                ShopUI(fontFamily, balanceViewModel, uid)
+            }
+
+
+            if (updateState is UiState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White)
                 }
             }
         }
-
-    }
 }
 
-
-@Composable
-fun QuickAction(
-    fontFamily: FontFamily,
-    balanceViewModel: BalanceViewModel,
-    uid: String?
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = "Quick Actions",
-            fontSize = 18.sp,
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-
-//            ActionsIU(fontFamily, R.drawable.coin_cash_in, "Cash In", {
-//                uid?.let { balanceViewModel.updateUserBalance(it, 100) }
-//            })
-//            ActionsIU(fontFamily, R.drawable.coin_cash_out, "Cash Out", {
-//                uid?.let { balanceViewModel.updateUserBalance(it, -10) }
-//            })
-//            ActionsIU(fontFamily, Icons.Default.CurrencyExchange, "History", {})
-//            ActionsIU(fontFamily, Icons.Default.QrCodeScanner, "Scan", {})
-
-        }
-    }
-}
-
-@Composable
-fun ActionsIU(
-    fontFamily: FontFamily,
-    icon: Int,
-    actionTitle: String,
-    onClick: () -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(45.dp))
-                .background(MaterialTheme.colorScheme.background)
-                .clickable { onClick() }
-                .padding(10.dp)
-        ) {
-            Image(
-                painter = painterResource(id = icon),
-                contentDescription = actionTitle,
-                modifier = Modifier.size(30.dp)
-            )
-        }
-
-
-        Text(
-            modifier = Modifier.padding(top = 5.dp),
-            text = actionTitle,
-            fontSize = 12.sp,
-            fontFamily = fontFamily,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White
-        )
-    }
-}
 
 val topUpItems = listOf(
     TopUp(

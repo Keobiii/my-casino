@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.example.casino.domain.usecase.CreateUserUseCase
 import com.example.casino.domain.usecase.RegisterUserUseCase
 import com.example.casino.utils.AuthResponse
+import com.example.casino.utils.UiState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import javax.inject.Inject
@@ -17,22 +18,23 @@ class RegisterViewModel(
     private val createUserUseCase: CreateUserUseCase
 ) : ViewModel() {
 
-    var registerState by mutableStateOf<AuthResponse?>(null)
+    var registerState by mutableStateOf<UiState<Unit>>(UiState.Idle)
         private set
 
     fun register(email: String, password: String) {
-        registerUserUseCase(email, password) { result ->
-            registerState = result
+        registerState = UiState.Loading
 
-            if (result is AuthResponse.Success) {
-                val uid = Firebase.auth.currentUser?.uid ?: return@registerUserUseCase
-                createUserUseCase(uid, email) { /* optional handle success */ }
+        registerUserUseCase(email, password) { result ->
+            registerState = when (result) {
+                is AuthResponse.Success -> UiState.Success(Unit)
+                is AuthResponse.Error -> UiState.Error(result.message)
+                else -> UiState.Error("Unknown Error")
             }
         }
     }
 
     fun resetRegisterState() {
-        registerState = null
+        registerState = UiState.Idle
     }
 }
 

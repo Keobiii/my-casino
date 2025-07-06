@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +51,8 @@ import com.example.casino.ui.theme.eggWhite
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.AuthResponse
 import com.example.casino.utils.ErrorMessageMapper
+import com.example.casino.utils.UiState
+import kotlinx.coroutines.delay
 
 @Composable
 fun Register() {
@@ -71,21 +74,27 @@ fun Register() {
     // Observe registration result
     val registerState = viewModel.registerState
 
+
     LaunchedEffect(registerState) {
         when (val state = registerState) {
-            is AuthResponse.Success -> {
+            is UiState.Success -> {
                 Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
                 context.startActivity(Intent(context, MainActivity::class.java))
                 (context as? Activity)?.finish()
             }
-            is AuthResponse.Error -> {
+
+            is UiState.Error -> {
                 val message = ErrorMessageMapper.map(state.message)
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
-            null -> {}
+
+            else -> {}
         }
 
-        viewModel.resetRegisterState()
+        if (registerState !is UiState.Loading) {
+            delay(1000)
+            viewModel.resetRegisterState()
+        }
     }
 
 
@@ -219,6 +228,17 @@ fun Register() {
                         }
                 )
 
+            }
+        }
+
+        if (registerState is UiState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }

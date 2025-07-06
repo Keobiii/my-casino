@@ -14,17 +14,9 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel() {
 
-//    var loginState by mutableStateOf<AuthResponse?>(null)
-//        private set
-
     var loginState by mutableStateOf<UiState<Unit>>(UiState.Idle)
         private set
 
-//    fun login(email: String, password: String) {
-//        loginUserUseCase(email, password) { result ->
-//            loginState = result
-//        }
-//    }
     fun login(email: String, password: String) {
         loginState = UiState.Loading
 
@@ -41,7 +33,4 @@ class LoginViewModel(private val loginUserUseCase: LoginUserUseCase) : ViewModel
         loginState = UiState.Idle
     }
 
-//    fun resetLoginState() {
-//        loginState = null
-//    }
 }
