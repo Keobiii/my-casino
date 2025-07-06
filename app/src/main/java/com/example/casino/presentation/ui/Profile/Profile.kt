@@ -51,10 +51,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casino.R
+import com.example.casino.data.repository.UserRepositoryImpl
+import com.example.casino.domain.usecase.ObserveUserDataUseCase
+import com.example.casino.domain.usecase.TransactionHistoryUseCase
+import com.example.casino.domain.usecase.UpdateUserFieldUseCase
 import com.example.casino.presentation.ui.Authentication.LoginActivity
+import com.example.casino.presentation.viewmodel.BalanceViewModel
+import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
+import com.example.casino.utils.UiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -67,6 +75,25 @@ fun Profile(fontFamily: FontFamily) {
 
     val dataStoreManager2 = remember { DataStoreManager(context) }
     val uid by dataStoreManager2.getUserUid().collectAsState(initial = null)
+
+    // Initialize ViewModel
+    val repository = UserRepositoryImpl()
+    val updateUserFieldUseCase = UpdateUserFieldUseCase(repository)
+    val balanceViewModel: BalanceViewModel = viewModel(
+        factory = BalanceViewModelFactory(
+            observeUserDataUseCase = ObserveUserDataUseCase(repository),
+            updateUserFieldUseCase = UpdateUserFieldUseCase(repository),
+            transactionHistoryUseCase = TransactionHistoryUseCase(updateUserFieldUseCase)
+        )
+    )
+
+    val userState = balanceViewModel.userState
+
+    LaunchedEffect(uid) {
+        uid?.let {
+            balanceViewModel.startObservingUser(it)
+        }
+    }
 
     LaunchedEffect(Unit) {
         uidFlow.collect { uid ->
@@ -88,7 +115,18 @@ fun Profile(fontFamily: FontFamily) {
                 .padding(10.dp)
                 .background(pageBackground)
         ) {
-            if (uid != null) userLoggedInUI(fontFamily, coroutineScope, context, dataStoreManager) else userVisitorUI(fontFamily, context)
+
+            if (uid != null) {
+                val userEmail = when (userState) {
+                    is UiState.Loading -> "Loading..."
+                    is UiState.Success -> "${userState.data.email}"
+                    is UiState.Error -> "Error occur! Please reload or re-login"
+                    else -> ""
+                }
+                userLoggedInUI(fontFamily, coroutineScope, context, dataStoreManager, userEmail)
+            } else  {
+                userVisitorUI(fontFamily, context)
+            }
         }
     }
 }
@@ -134,7 +172,8 @@ fun userLoggedInUI(
     fontFamily: FontFamily,
     coroutineScope: CoroutineScope,
     context: Context,
-    dataStoreManager: DataStoreManager
+    dataStoreManager: DataStoreManager,
+    userEmail: String,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().height(260.dp),
@@ -158,7 +197,7 @@ fun userLoggedInUI(
         }
         Text(
             modifier = Modifier.padding(top = 15.dp),
-            text = "Keobi Keribu",
+            text = "${userEmail}",
             fontSize = 18.sp,
             color = Color.White,
             fontFamily = fontFamily,
@@ -180,207 +219,207 @@ fun userLoggedInUI(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        // Profile
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clickable { },
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Row(
-                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(30.dp),
-                    imageVector = Icons.Rounded.Person,
-                    contentDescription = "Person Icon",
-                    tint = Color.White
-                )
-
-
-                Text(
-                    modifier = Modifier.padding(start = 25.dp),
-                    text = "Language",
-                    color = Color.White,
-                    fontFamily = fontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Normal,
-                )
-            }
-
-            Column(
-                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.End
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = "Arrow Icon",
-                    tint = Color.White
-                )
-
-            }
-        }
-
-        // Email
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clickable { },
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Row(
-                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(30.dp),
-                    imageVector = Icons.Rounded.Email,
-                    contentDescription = "Email Icon",
-                    tint = Color.White
-                )
-
-
-                Text(
-                    modifier = Modifier.padding(start = 25.dp),
-                    text = "Linked Account",
-                    color = Color.White,
-                    fontFamily = fontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Normal,
-                )
-
-
-            }
-
-            Column(
-                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.End
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = "Arrow Icon",
-                    tint = Color.White
-                )
-
-            }
-        }
-
-        // Clear Cache
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clickable { },
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Row(
-                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(30.dp),
-                    imageVector = Icons.Rounded.DeleteOutline,
-                    contentDescription = "Cache Icon",
-                    tint = Color.White
-                )
-
-
-                Text(
-                    modifier = Modifier.padding(start = 25.dp),
-                    text = "Clear Cache",
-                    color = Color.White,
-                    fontFamily = fontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Normal,
-                )
-
-
-            }
-
-            Column(
-                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.End
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = "Arrow Icon",
-                    tint = Color.White
-                )
-
-            }
-        }
-
-        // Clear History
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clickable { },
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Row(
-                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(30.dp),
-                    imageVector = Icons.Rounded.History,
-                    contentDescription = "History Icon",
-                    tint = Color.White
-                )
-
-
-                Text(
-                    modifier = Modifier.padding(start = 25.dp),
-                    text = "Clear History",
-                    color = Color.White,
-                    fontFamily = fontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Normal,
-                )
-
-
-            }
-
-            Column(
-                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.End
-            ) {
-
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                    contentDescription = "Arrow Icon",
-                    tint = Color.White
-                )
-
-            }
-        }
+//        // Profile
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(60.dp)
+//                .clickable { },
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//
+//            Row(
+//                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+//                horizontalArrangement = Arrangement.Start,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(30.dp),
+//                    imageVector = Icons.Rounded.Person,
+//                    contentDescription = "Person Icon",
+//                    tint = Color.White
+//                )
+//
+//
+//                Text(
+//                    modifier = Modifier.padding(start = 25.dp),
+//                    text = "Language",
+//                    color = Color.White,
+//                    fontFamily = fontFamily,
+//                    fontSize = 15.sp,
+//                    fontWeight = FontWeight.Normal,
+//                )
+//            }
+//
+//            Column(
+//                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.End
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(20.dp),
+//                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+//                    contentDescription = "Arrow Icon",
+//                    tint = Color.White
+//                )
+//
+//            }
+//        }
+//
+//        // Email
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(60.dp)
+//                .clickable { },
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//
+//            Row(
+//                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+//                horizontalArrangement = Arrangement.Start,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(30.dp),
+//                    imageVector = Icons.Rounded.Email,
+//                    contentDescription = "Email Icon",
+//                    tint = Color.White
+//                )
+//
+//
+//                Text(
+//                    modifier = Modifier.padding(start = 25.dp),
+//                    text = "Linked Account",
+//                    color = Color.White,
+//                    fontFamily = fontFamily,
+//                    fontSize = 15.sp,
+//                    fontWeight = FontWeight.Normal,
+//                )
+//
+//
+//            }
+//
+//            Column(
+//                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.End
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(20.dp),
+//                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+//                    contentDescription = "Arrow Icon",
+//                    tint = Color.White
+//                )
+//
+//            }
+//        }
+//
+//        // Clear Cache
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(60.dp)
+//                .clickable { },
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//
+//            Row(
+//                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+//                horizontalArrangement = Arrangement.Start,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(30.dp),
+//                    imageVector = Icons.Rounded.DeleteOutline,
+//                    contentDescription = "Cache Icon",
+//                    tint = Color.White
+//                )
+//
+//
+//                Text(
+//                    modifier = Modifier.padding(start = 25.dp),
+//                    text = "Clear Cache",
+//                    color = Color.White,
+//                    fontFamily = fontFamily,
+//                    fontSize = 15.sp,
+//                    fontWeight = FontWeight.Normal,
+//                )
+//
+//
+//            }
+//
+//            Column(
+//                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.End
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(20.dp),
+//                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+//                    contentDescription = "Arrow Icon",
+//                    tint = Color.White
+//                )
+//
+//            }
+//        }
+//
+//        // Clear History
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(60.dp)
+//                .clickable { },
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//
+//            Row(
+//                modifier = Modifier.weight(0.8f).padding(start = 16.dp).fillMaxSize(),
+//                horizontalArrangement = Arrangement.Start,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(30.dp),
+//                    imageVector = Icons.Rounded.History,
+//                    contentDescription = "History Icon",
+//                    tint = Color.White
+//                )
+//
+//
+//                Text(
+//                    modifier = Modifier.padding(start = 25.dp),
+//                    text = "Clear History",
+//                    color = Color.White,
+//                    fontFamily = fontFamily,
+//                    fontSize = 15.sp,
+//                    fontWeight = FontWeight.Normal,
+//                )
+//
+//
+//            }
+//
+//            Column(
+//                modifier = Modifier.weight(0.15f).fillMaxSize().padding(end = 16.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.End
+//            ) {
+//
+//                Icon(
+//                    modifier = Modifier.size(20.dp),
+//                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+//                    contentDescription = "Arrow Icon",
+//                    tint = Color.White
+//                )
+//
+//            }
+//        }
 
         // Logout
         Row(
