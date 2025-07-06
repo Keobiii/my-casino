@@ -1,4 +1,4 @@
-package com.example.casino.presentation.ui.Profile
+package com.example.casino.presentation.ui.Authentication
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.casino.Navigation
 import com.example.casino.ui.theme.CasinoTheme
 import com.example.casino.ui.theme.pageBackground
 

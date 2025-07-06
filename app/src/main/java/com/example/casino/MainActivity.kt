@@ -44,7 +44,8 @@ import com.example.casino.presentation.ui.Home.GameUI
 import com.example.casino.presentation.ui.Home.Home
 import com.example.casino.utils.TopNavigationBar
 import com.example.casino.presentation.ui.Profile.Profile
-import com.example.casino.presentation.ui.TopUp.TopUp
+import com.example.casino.presentation.ui.Shop.Shop
+import com.example.casino.presentation.ui.Shop.TopUp
 import com.example.casino.presentation.viewmodel.BalanceViewModel
 import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
 import com.example.casino.ui.theme.CasinoTheme
@@ -141,7 +142,7 @@ fun Navigation() {
             modifier = Modifier.padding(padding)
         ) {
             composable("home") { Home(navController, fontFamily) }
-            composable("top_up") { TopUp(fontFamily) }
+            composable("top_up") { Shop(fontFamily) }
             composable("profile") { Profile(fontFamily) }
             composable(
                 "gameUI/{index}/{title}",

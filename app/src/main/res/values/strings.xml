@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Casino</string>
     <string name="web_client_id">232551495751-oli9vvam3gic3vlka1m8hcifbkh8obmm.apps.googleusercontent.com</string>
+    <string name="title_activity_shop">Shop</string>
 </resources>

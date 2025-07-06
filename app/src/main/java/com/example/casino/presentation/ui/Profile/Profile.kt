@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casino.R
+import com.example.casino.presentation.ui.Authentication.LoginActivity
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
 import kotlinx.coroutines.CoroutineScope

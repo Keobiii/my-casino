@@ -1,6 +1,5 @@
-package com.example.casino.presentation.ui.TopUp
+package com.example.casino.presentation.ui.Shop
 
-import android.service.autofill.OnClickAction
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,8 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,14 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.CurrencyExchange
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -46,20 +43,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casino.presentation.ui.Home.getGradient
 import com.example.casino.R
-import com.example.casino.data.model.Transaction
+import com.example.casino.data.model.TopUp
 import com.example.casino.data.repository.UserRepositoryImpl
 import com.example.casino.domain.usecase.ObserveUserDataUseCase
 import com.example.casino.domain.usecase.UpdateUserFieldUseCase
@@ -67,58 +63,15 @@ import com.example.casino.presentation.viewmodel.BalanceViewModel
 import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
 import com.example.casino.ui.theme.ch4EndColor
 import com.example.casino.ui.theme.ch4StartColor
-import com.example.casino.ui.theme.eggGray
-import com.example.casino.ui.theme.eggWhite
+import com.example.casino.ui.theme.darkPageBackground
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
 
-val transactions = listOf(
-    Transaction(
-        type = "cash_in",
-        date = "11/12/25",
-        amount = 24.25f,
-        icon = R.drawable.coin_cash_in
-    ),
-
-    Transaction(
-        type = "withdraw",
-        date = "11/12/25",
-        amount = 24.25f,
-        icon = R.drawable.coin_cash_out
-    ),
-
-    Transaction(
-        type = "withdraw",
-        date = "11/12/25",
-        amount = 24.25f,
-        icon = R.drawable.coin_cash_out
-    ),
-
-    Transaction(
-        type = "cash_in",
-        date = "11/12/25",
-        amount = 24.25f,
-        icon = R.drawable.coin_cash_in
-    ),
-
-    Transaction(
-        type = "cash_in",
-        date = "11/12/25",
-        amount = 24.25f,
-        icon = R.drawable.coin_cash_in
-    ),
-
-    Transaction(
-        type = "cash_in",
-        date = "11/12/25",
-        amount = 24.25f,
-        icon = R.drawable.coin_cash_in
-    ),
-)
-
 
 @Composable
-fun TopUp(fontFamily: FontFamily) {
+fun TopUp(
+    fontFamily: FontFamily
+) {
     val context = LocalContext.current
     val dataStoreManager = remember { DataStoreManager(context) }
 
@@ -143,16 +96,29 @@ fun TopUp(fontFamily: FontFamily) {
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            BalanceUI(fontFamily)
-            Spacer(modifier = Modifier.height(20.dp))
-            QuickAction(fontFamily, balanceViewModel, uid)
-            Spacer(modifier = Modifier.height(20.dp))
-            History(fontFamily)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "Top Up",
+                    fontSize = 18.sp,
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+//            BalanceUI(fontFamily)
+//            Spacer(modifier = Modifier.height(20.dp))
+//            QuickAction(fontFamily, balanceViewModel, uid)
+//            Spacer(modifier = Modifier.height(20.dp))
+            ShopUI(fontFamily, balanceViewModel, uid)
         }
     }
 }
@@ -276,12 +242,12 @@ fun QuickAction(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
 
-            ActionsIU(fontFamily, R.drawable.coin_cash_in, "Cash In", {
-                uid?.let { balanceViewModel.updateUserBalance(it, 100) }
-            })
-            ActionsIU(fontFamily, R.drawable.coin_cash_out, "Cash Out", {
-                uid?.let { balanceViewModel.updateUserBalance(it, -10) }
-            })
+//            ActionsIU(fontFamily, R.drawable.coin_cash_in, "Cash In", {
+//                uid?.let { balanceViewModel.updateUserBalance(it, 100) }
+//            })
+//            ActionsIU(fontFamily, R.drawable.coin_cash_out, "Cash Out", {
+//                uid?.let { balanceViewModel.updateUserBalance(it, -10) }
+//            })
 //            ActionsIU(fontFamily, Icons.Default.CurrencyExchange, "History", {})
 //            ActionsIU(fontFamily, Icons.Default.QrCodeScanner, "Scan", {})
 
@@ -326,150 +292,115 @@ fun ActionsIU(
     }
 }
 
-@Composable
-fun History(fontFamily: FontFamily) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Transactions",
-                fontSize = 18.sp,
-                fontFamily = fontFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+val topUpItems = listOf(
+    TopUp(
+        50.00
+    ),
+    TopUp(
+        100.00
+    ),
+    TopUp(
+        200.00
+    ),
+    TopUp(
+        300.00
+    ),
+    TopUp(
+        400.00
+    ),
+    TopUp(
+        500.00
+    ),
+)
 
-            Text(
-                text = "See All",
-                fontFamily = fontFamily,
-                fontSize = 14.sp,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.End,
-                textDecoration = TextDecoration.Underline,
-            )
-        }
-
-        LazyColumn(
-            modifier = Modifier.clip(RoundedCornerShape(10.dp))
-        ) {
-            items(transactions.size) { index ->
-                HistoryList(index, fontFamily)
-            }
-
-        }
-
-    }
-}
 
 @Composable
-fun HistoryList(index: Int, fontFamily: FontFamily) {
-
-
-    val bgColor = if (index % 2 == 0) {
-        eggGray
-    } else {
-        eggWhite
-    }
-
-    val transaction = transactions[index]
-
-    val (title, fontColor) = when (transaction.type) {
-        "cash_in" -> "Cash In" to Color.Green
-        else -> "Withdraw" to Color.Red
-    }
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 15.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
+fun ShopUI(
+    fontFamily: FontFamily,
+    balanceViewModel: BalanceViewModel,
+    uid: String?
+) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
         ) {
-
-            Row(
-                modifier = Modifier
-                    .weight(0.6f)
-                    .padding(start = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-
-                Box(
+            items(topUpItems) { item ->
+                Card(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(4.dp)
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .clip(RoundedCornerShape(10.dp)),
+                    colors = CardDefaults.cardColors(containerColor = darkPageBackground),
                 ) {
-                    Image(
-                        painter = painterResource(id = transaction.icon),
-                        contentDescription = transaction.type,
-                        modifier = Modifier.size(25.dp),
+                    Column (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(75.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.coin_3d),
+                                contentDescription = "Icon Logo",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxSize()
 
-                    )
+                            )
+                        }
+
+
+                        Row (
+                            modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "PHP",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.LightGray,
+                                fontFamily = fontFamily
+                            )
+
+                            Text(
+                                text = "${item.amound}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.LightGray,
+                                fontFamily = fontFamily
+
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(55.dp)
+                                .padding(top = 20.dp)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(Color(0xFF2F2FFD))
+                                .clickable {
+                                    uid?.let { balanceViewModel.updateUserBalance(it, item.amound) }
+                                },
+                        ) {
+                            Text(
+                                modifier = Modifier.align(Alignment.Center),
+                                text = "Buy",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = fontFamily
+                            )
+                        }
+                    }
                 }
-
-                Column(
-                    modifier = Modifier.padding(start = 10.dp)
-                ) {
-                    Text(
-                        text = title,
-                        fontFamily = fontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = Color.White,
-                    )
-                    Text(
-                        text = transaction.date,
-                        fontFamily = fontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 10.sp,
-                        color = Color.White,
-                    )
-                }
-
-
             }
-
-            Box(
-                modifier = Modifier
-                    .weight(0.4f)
-                    .padding(end = 5.dp),
-            ){
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = if (transaction.type == "cash_in") "+$${transaction.amount}" else "-$${transaction.amount}",
-                    fontFamily = fontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    color = fontColor,
-                    textAlign = TextAlign.End
-                )
-            }
-
-
         }
-
-        Spacer(modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(Color.Gray))
     }
-
-
-}

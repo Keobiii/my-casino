@@ -22,7 +22,7 @@ class BalanceViewModel(
         }
     }
 
-    fun updateUserBalance(uid: String, delta: Int) {
+    fun updateUserBalance(uid: String, delta: Double) {
         user.value?.let { currentUser ->
             val newBalance = currentUser.balance + delta
             val updates = mapOf("balance" to newBalance)

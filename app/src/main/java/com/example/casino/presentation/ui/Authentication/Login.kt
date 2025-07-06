@@ -1,4 +1,4 @@
-package com.example.casino.presentation.ui.Profile
+package com.example.casino.presentation.ui.Authentication
 
 import android.app.Activity
 import android.content.Intent
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +27,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,65 +37,64 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casino.MainActivity
 import com.example.casino.R
 import com.example.casino.data.repository.AuthRepositoryImpl
-import com.example.casino.data.repository.UserRepositoryImpl
-import com.example.casino.domain.usecase.CreateUserUseCase
-import com.example.casino.domain.usecase.RegisterUserUseCase
-import com.example.casino.presentation.viewmodel.RegisterViewModel
+import com.example.casino.domain.usecase.LoginUserUseCase
+import com.example.casino.presentation.viewmodel.LoginViewModel
 import com.example.casino.utils.CustomOutlinedTextField
 import com.example.casino.ui.theme.eggWhite
 import com.example.casino.ui.theme.pageBackground
-import com.example.casino.utils.AuthResponse
-import com.example.casino.utils.AuthenticaionManager
+import com.example.casino.utils.DataStoreManager
 import com.example.casino.utils.ErrorMessageMapper
+import com.example.casino.utils.UiState
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
-fun Register() {
+fun Login() {
     val context = LocalContext.current
-
-    // ViewModel
     val viewModel = remember {
-        RegisterViewModel(
-            registerUserUseCase = RegisterUserUseCase(AuthRepositoryImpl()),
-            createUserUseCase = CreateUserUseCase(UserRepositoryImpl())
-        )
+        LoginViewModel(LoginUserUseCase(AuthRepositoryImpl()))
     }
 
-    // Fields
     var emailField by remember { mutableStateOf("") }
     var passwordField by remember { mutableStateOf("") }
-    var cpasswordField by remember { mutableStateOf("") }
 
-    // Observe registration result
-    val registerState = viewModel.registerState
+    val loginState = viewModel.loginState
 
-    LaunchedEffect(registerState) {
-        when (val state = registerState) {
-            is AuthResponse.Success -> {
-                Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
-                context.startActivity(Intent(context, MainActivity::class.java))
-                (context as? Activity)?.finish()
+    LaunchedEffect(loginState) {
+        when (val state = loginState) {
+            is UiState.Success -> {
+                val uid = Firebase.auth.currentUser?.uid
+                uid?.let {
+                    DataStoreManager(context).saveUserUid(it)
+                    Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                    context.startActivity(Intent(context, MainActivity::class.java))
+                    (context as? Activity)?.finish()
+                }
             }
-            is AuthResponse.Error -> {
-                val message = ErrorMessageMapper.map(state.message)
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+            is UiState.Error -> {
+                Toast.makeText(context, ErrorMessageMapper.map(state.message), Toast.LENGTH_SHORT).show()
             }
-            null -> {}
+
+//            is UiState.Loading -> {
+//                Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
+//            }
+
+            else -> {}
         }
 
-        viewModel.resetRegisterState()
+        // Delay resting state to see the loading
+        if (loginState !is UiState.Loading) {
+            delay(1000)
+            viewModel.resetLoginState()
+        }
     }
-
-
-
 
 
 
@@ -136,23 +135,29 @@ fun Register() {
                     isPassword = true
                 )
 
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                CustomOutlinedTextField(
-                    value = cpasswordField,
-                    onValueChange = { cpasswordField = it },
-                    label = "Confirm Password",
-                    isPassword = true
+                Text(
+                    "Forgot Password?",
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.End,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = FontStyle.Italic,
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
                 )
+
 
                 Spacer(modifier = Modifier.height(25.dp))
 
                 Button(
                     onClick = {
-                        if (emailField.isNotBlank() && passwordField == cpasswordField) {
-                            viewModel.register(emailField, passwordField)
+                        if (emailField.isNotBlank() &&  passwordField.isNotBlank()) {
+                            viewModel.login(emailField, passwordField)
                         } else {
-                            Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Fill up all fields", Toast.LENGTH_SHORT).show()
                         }
                     },
                     shape = RoundedCornerShape(10.dp),
@@ -162,7 +167,7 @@ fun Register() {
                         .height(50.dp)
                 ) {
                     Text(
-                        text = "Register",
+                        text = "Login",
                         textAlign = TextAlign.Center,
                         fontSize = 16.sp,
                         color = Color.White,
@@ -173,9 +178,7 @@ fun Register() {
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Button(
-                    onClick = {
-
-                    },
+                    onClick = {},
                     colors = ButtonDefaults.buttonColors(containerColor = eggWhite),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
@@ -209,7 +212,7 @@ fun Register() {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    "You have already an Account? Login",
+                    "You don't have an Account? Register",
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily.SansSerif,
@@ -219,12 +222,23 @@ fun Register() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            val intent = Intent(context, LoginActivity::class.java)
+                            val intent = Intent(context, RegisterActivity::class.java)
                             context.startActivity(intent)
                             (context as? Activity)?.finish()
                         }
                 )
 
+            }
+        }
+
+        if (loginState is UiState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }

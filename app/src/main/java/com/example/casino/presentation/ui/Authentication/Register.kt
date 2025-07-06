@@ -1,8 +1,7 @@
-package com.example.casino.presentation.ui.Profile
+package com.example.casino.presentation.ui.Authentication
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +26,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,69 +36,60 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casino.MainActivity
 import com.example.casino.R
 import com.example.casino.data.repository.AuthRepositoryImpl
 import com.example.casino.data.repository.UserRepositoryImpl
-import com.example.casino.domain.usecase.LoginUserUseCase
-import com.example.casino.presentation.viewmodel.LoginViewModel
+import com.example.casino.domain.usecase.CreateUserUseCase
+import com.example.casino.domain.usecase.RegisterUserUseCase
+import com.example.casino.presentation.viewmodel.RegisterViewModel
 import com.example.casino.utils.CustomOutlinedTextField
 import com.example.casino.ui.theme.eggWhite
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.AuthResponse
-import com.example.casino.utils.AuthenticaionManager
-import com.example.casino.utils.DataStoreManager
 import com.example.casino.utils.ErrorMessageMapper
-import com.example.casino.utils.UiState
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
-fun Login() {
+fun Register() {
     val context = LocalContext.current
+
+    // ViewModel
     val viewModel = remember {
-        LoginViewModel(LoginUserUseCase(AuthRepositoryImpl()))
+        RegisterViewModel(
+            registerUserUseCase = RegisterUserUseCase(AuthRepositoryImpl()),
+            createUserUseCase = CreateUserUseCase(UserRepositoryImpl())
+        )
     }
 
+    // Fields
     var emailField by remember { mutableStateOf("") }
     var passwordField by remember { mutableStateOf("") }
+    var cpasswordField by remember { mutableStateOf("") }
 
-    val loginState = viewModel.loginState
+    // Observe registration result
+    val registerState = viewModel.registerState
 
-    LaunchedEffect(loginState) {
-        when (val state = loginState) {
-            is UiState.Success -> {
-                val uid = Firebase.auth.currentUser?.uid
-                uid?.let {
-                    DataStoreManager(context).saveUserUid(it)
-                    Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                    context.startActivity(Intent(context, MainActivity::class.java))
-                    (context as? Activity)?.finish()
-                }
+    LaunchedEffect(registerState) {
+        when (val state = registerState) {
+            is AuthResponse.Success -> {
+                Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+                context.startActivity(Intent(context, MainActivity::class.java))
+                (context as? Activity)?.finish()
             }
-
-            is UiState.Error -> {
-                Toast.makeText(context, ErrorMessageMapper.map(state.message), Toast.LENGTH_SHORT).show()
+            is AuthResponse.Error -> {
+                val message = ErrorMessageMapper.map(state.message)
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
-
-//            is UiState.Loading -> {
-//                Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
-//            }
-
-            else -> {}
+            null -> {}
         }
 
-        // Delay resting state to see the loading
-        if (loginState !is UiState.Loading) {
-            delay(1000)
-            viewModel.resetLoginState()
-        }
+        viewModel.resetRegisterState()
     }
+
+
+
 
 
 
@@ -142,29 +130,23 @@ fun Login() {
                     isPassword = true
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
-                Text(
-                    "Forgot Password?",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.End,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Normal,
-                    fontStyle = FontStyle.Italic,
-                    color = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                CustomOutlinedTextField(
+                    value = cpasswordField,
+                    onValueChange = { cpasswordField = it },
+                    label = "Confirm Password",
+                    isPassword = true
                 )
-
 
                 Spacer(modifier = Modifier.height(25.dp))
 
                 Button(
                     onClick = {
-                        if (emailField.isNotBlank() &&  passwordField.isNotBlank()) {
-                            viewModel.login(emailField, passwordField)
+                        if (emailField.isNotBlank() && passwordField == cpasswordField) {
+                            viewModel.register(emailField, passwordField)
                         } else {
-                            Toast.makeText(context, "Fill up all fields", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
                         }
                     },
                     shape = RoundedCornerShape(10.dp),
@@ -174,7 +156,7 @@ fun Login() {
                         .height(50.dp)
                 ) {
                     Text(
-                        text = "Login",
+                        text = "Register",
                         textAlign = TextAlign.Center,
                         fontSize = 16.sp,
                         color = Color.White,
@@ -185,7 +167,9 @@ fun Login() {
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Button(
-                    onClick = {},
+                    onClick = {
+
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = eggWhite),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
@@ -219,7 +203,7 @@ fun Login() {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    "You don't have an Account? Register",
+                    "You have already an Account? Login",
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily.SansSerif,
@@ -229,23 +213,12 @@ fun Login() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            val intent = Intent(context, RegisterActivity::class.java)
+                            val intent = Intent(context, LoginActivity::class.java)
                             context.startActivity(intent)
                             (context as? Activity)?.finish()
                         }
                 )
 
-            }
-        }
-
-        if (loginState is UiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color.White)
             }
         }
     }
