@@ -3,6 +3,7 @@ package com.example.casino.data.repository
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.casino.data.model.Transaction
 import com.example.casino.data.model.User
 import com.example.casino.domain.repository.UserRepository
 import com.example.casino.utils.AuthResponse
@@ -60,5 +61,39 @@ class UserRepositoryImpl : UserRepository {
             .addOnCompleteListener { task ->
                 onResult(task.isSuccessful)
             }
+    }
+
+    override fun getTransactionHistory(uid: String, onResult: (List<Transaction>) -> Unit) {
+        val ref = FirebaseDatabase.getInstance().getReference("users").child(uid)
+        ref.get().addOnSuccessListener { snapshot ->
+            val cashInMap = snapshot.child("cashInHistory").value as? Map<String, HashMap<String, Any>> ?: emptyMap()
+            val cashOutMap = snapshot.child("cashOutHistory").value as? Map<String, HashMap<String, Any>> ?: emptyMap()
+
+            val transactions = mutableListOf<Transaction>()
+
+            for ((id, data) in cashInMap) {
+                transactions.add(
+                    Transaction(
+                        transactionId = id,
+                        date = data["date"]?.toString() ?: "",
+                        type = "cash_in",
+                        amount = (data["amount"] as? Long)?.toDouble() ?: 0.00
+                    )
+                )
+            }
+
+            for ((id, data) in cashOutMap) {
+                transactions.add(
+                    Transaction(
+                        transactionId = id,
+                        date = data["date"]?.toString() ?: "",
+                        type = "withdraw",
+                        amount = (data["amount"] as? Long)?.toDouble() ?: 0.00
+                    )
+                )
+            }
+
+            onResult(transactions.sortedByDescending { it.date })
+        }
     }
 }

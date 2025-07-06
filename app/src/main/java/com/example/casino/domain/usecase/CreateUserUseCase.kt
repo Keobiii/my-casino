@@ -12,8 +12,8 @@ class CreateUserUseCase(private val repository: UserRepository) {
 
         val newUser = User(
             balance = 0,
-            cashInHistory = emptyList(),
-            cashOutHistory = emptyList(),
+            cashInHistory = emptyMap(),
+            cashOutHistory = emptyMap(),
             dateCreated = date,
             email = email
         )

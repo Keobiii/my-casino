@@ -1,6 +1,7 @@
 package com.example.casino.domain.repository
 
 import androidx.lifecycle.LiveData
+import com.example.casino.data.model.Transaction
 import com.example.casino.data.model.User
 import com.example.casino.utils.AuthResponse
 
@@ -13,4 +14,5 @@ interface UserRepository {
         updates: Map<String, Any>,
         onResult: (Boolean) -> Unit
     )
+    fun getTransactionHistory(uid: String, onResult: (List<Transaction>) -> Unit)
 }

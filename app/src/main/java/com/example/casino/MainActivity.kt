@@ -39,6 +39,7 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casino.data.repository.UserRepositoryImpl
 import com.example.casino.domain.usecase.ObserveUserDataUseCase
+import com.example.casino.domain.usecase.TransactionHistoryUseCase
 import com.example.casino.domain.usecase.UpdateUserFieldUseCase
 import com.example.casino.presentation.ui.Home.GameUI
 import com.example.casino.presentation.ui.Home.Home
@@ -105,10 +106,12 @@ fun Navigation() {
 
     // Initialize ViewModel
     val repository = UserRepositoryImpl()
+    val updateUserFieldUseCase = UpdateUserFieldUseCase(repository)
     val balanceViewModel: BalanceViewModel = viewModel(
         factory = BalanceViewModelFactory(
             observeUserDataUseCase = ObserveUserDataUseCase(repository),
-            updateUserFieldUseCase = UpdateUserFieldUseCase(repository)
+            updateUserFieldUseCase = UpdateUserFieldUseCase(repository),
+            transactionHistoryUseCase = TransactionHistoryUseCase(updateUserFieldUseCase)
         )
     )
 

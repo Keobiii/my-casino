@@ -1,21 +1,20 @@
 package com.example.casino.presentation.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import com.example.casino.data.model.User
 import com.example.casino.domain.usecase.ObserveUserDataUseCase
+import com.example.casino.domain.usecase.TransactionHistoryUseCase
 import com.example.casino.domain.usecase.UpdateUserFieldUseCase
 import com.example.casino.utils.UiState
 
 class BalanceViewModel(
     private val observeUserDataUseCase: ObserveUserDataUseCase,
-    private val updateUserFieldUseCase: UpdateUserFieldUseCase
+    private val updateUserFieldUseCase: UpdateUserFieldUseCase,
+    private val transactionHistoryUseCase: TransactionHistoryUseCase
 ) : ViewModel() {
 
     var userState by mutableStateOf<UiState<User>>(UiState.Idle)
@@ -34,10 +33,10 @@ class BalanceViewModel(
         }
 
         userObserver = Observer { user ->
-            if (user != null) {
-                userState = UiState.Success(user)
+            userState = if (user != null) {
+                UiState.Success(user)
             } else {
-                userState = UiState.Error("User not found")
+                UiState.Error("User not found")
             }
         }
 
@@ -47,19 +46,33 @@ class BalanceViewModel(
     fun updateUserBalance(uid: String, delta: Double) {
         val user = (userState as? UiState.Success)?.data ?: return
 
-        val newBalance = user.balance + delta
-        val updates = mapOf("balance" to newBalance)
+        val currentBalance = user.balance
+        val newBalance = currentBalance + delta
+
+        if (newBalance < 0) {
+            updateBalanceState = UiState.Error("Insufficient balance")
+            return
+        }
 
         updateBalanceState = UiState.Loading
 
-        updateUserFieldUseCase(uid, updates) { success ->
-            updateBalanceState = if (success) {
-                UiState.Success(Unit)
+        val updates = mapOf("balance" to newBalance)
+
+        updateUserFieldUseCase(uid, updates) { balanceSuccess ->
+            if (balanceSuccess) {
+                transactionHistoryUseCase(uid, delta) { historySuccess ->
+                    updateBalanceState = if (historySuccess) {
+                        UiState.Success(Unit)
+                    } else {
+                        UiState.Error("Balance updated, but failed to log transaction.")
+                    }
+                }
             } else {
-                UiState.Error("Failed to update balance")
+                updateBalanceState = UiState.Error("Failed to update balance.")
             }
         }
     }
+
 
     fun resetUpdateBalanceState() {
         updateBalanceState = UiState.Idle
