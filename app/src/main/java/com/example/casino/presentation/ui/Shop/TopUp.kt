@@ -150,7 +150,7 @@ val topUpItems = listOf(
         100.00
     ),
     TopUp(
-        -200.00
+        200.00
     ),
     TopUp(
         300.00

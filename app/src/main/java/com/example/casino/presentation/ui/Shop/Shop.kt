@@ -39,9 +39,7 @@ fun Shop(
             TopUp(fontFamily)
         }),
         Shop_TabItem("Withdraw", page = {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Withdraw Page", color = Color.White, fontSize = 20.sp)
-            }
+            Withdraw()
         }),
         Shop_TabItem("History", page = {
             History(fontFamily)
