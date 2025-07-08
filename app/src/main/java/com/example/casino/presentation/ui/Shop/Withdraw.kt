@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +58,7 @@ import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.CustomOutlinedTextField
 import com.example.casino.utils.DataStoreManager
 import com.example.casino.utils.TextFieldWithDropdown
+import com.example.casino.utils.TransparentTextField
 import com.example.casino.utils.UiState
 import kotlinx.coroutines.delay
 
@@ -64,11 +68,11 @@ fun Withdraw() {
     val context = LocalContext.current
     val dataStoreManager = DataStoreManager(context)
 
-    val dataStoreManager2 = remember { DataStoreManager(context) }
-    val uid by dataStoreManager2.getUserUid().collectAsState(initial = null)
+    val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
 
     var amount by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf("Gcash") }
+    var number by remember { mutableStateOf("") }
 
     val banks = listOf("Gcash", "Paymaya")
 
@@ -83,23 +87,23 @@ fun Withdraw() {
         )
     )
 
-    val userState = balanceViewModel.userState
+//    val userState = balanceViewModel.userState
 
     val updateState = balanceViewModel.updateBalanceState
 
 
-    LaunchedEffect(uid) {
-        uid?.let {
-            balanceViewModel.startObservingUser(it)
-        }
-    }
+//    LaunchedEffect(uid) {
+//        uid?.let {
+//            balanceViewModel.startObservingUser(it)
+//        }
+//    }
 
     LaunchedEffect(updateState) {
         if (updateState == UiState.Idle) return@LaunchedEffect
 
         when (updateState) {
             is UiState.Success -> {
-                Toast.makeText(context, "Balance updated!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Withdraw Success!", Toast.LENGTH_SHORT).show()
                 amount = "";
             }
             is UiState.Error -> {
@@ -139,34 +143,41 @@ fun Withdraw() {
             Spacer(modifier = Modifier.height(20.dp))
 
 
-                val userBalance = when (userState) {
-                    is UiState.Loading -> "Loading..."
-                    is UiState.Success -> "${userState.data.balance}"
-                    is UiState.Error -> "Error"
-                    else -> "Error"
-                }
+//                val userBalance = when (userState) {
+//                    is UiState.Loading -> "Loading..."
+//                    is UiState.Success -> "${userState.data.balance}"
+//                    is UiState.Error -> "Error"
+//                    else -> "Error"
+//                }
 
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                text = "PHP ${userBalance}",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.LightGray,
-                textAlign = TextAlign.Center
-            )
+
+
 
             Spacer(modifier = Modifier.height(20.dp))
-            
+            TransparentTextField(
+                label = "PHP 100.00",
+                text = amount,
+                onTextChange = { amount = it},
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+
 
             TextFieldWithDropdown(
-                label = "Enter amount",
-                text = amount,
-                onTextChange = { amount = it },
+                label = "Enter number",
+                text = number,
+                onTextChange = { number = it },
                 dropdownItems = banks,
                 selectedItem = selected,
-                onItemSelected = { selected = it }
+                onItemSelected = { selected = it },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                )
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -184,6 +195,12 @@ fun Withdraw() {
                             Toast.makeText(context, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
                             return@clickable
                         }
+
+                        if (number == null || number.length < 11) {
+                            Toast.makeText(context, "Please enter a account number", Toast.LENGTH_SHORT).show()
+                            return@clickable
+                        }
+
 
                         if (selected.isBlank()) {
                             Toast.makeText(context, "Please select a bank", Toast.LENGTH_SHORT).show()

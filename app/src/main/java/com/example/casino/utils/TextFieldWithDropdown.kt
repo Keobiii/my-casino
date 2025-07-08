@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
@@ -35,7 +36,8 @@ fun TextFieldWithDropdown(
     onTextChange: (String) -> Unit,
     dropdownItems: List<String>,
     selectedItem: String,
-    onItemSelected: (String) -> Unit
+    onItemSelected: (String) -> Unit,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -79,6 +81,7 @@ fun TextFieldWithDropdown(
                 }
             }
         },
+        keyboardOptions = keyboardOptions,
         singleLine = true,
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = MaterialTheme.colorScheme.onBackground,
