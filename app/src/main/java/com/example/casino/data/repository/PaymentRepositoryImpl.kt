@@ -1,5 +1,6 @@
 package com.example.casino.data.repository
 
+import com.example.casino.data.model.PaymentLinkResult
 import com.example.casino.domain.repository.PaymentRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,7 +16,7 @@ class PaymentRepositoryImpl : PaymentRepository {
     override suspend fun createPaymentLink(
         amount: Int,
         description: String,
-        onResult: (Result<String>) -> Unit
+        onResult: (Result<PaymentLinkResult>) -> Unit
     ) {
         withContext(Dispatchers.IO) {
             try {
@@ -23,14 +24,14 @@ class PaymentRepositoryImpl : PaymentRepository {
                 val body = RequestBody.create(
                     mediaType,
                     """
-                        {
-                          "data": {
-                            "attributes": {
-                              "amount": $amount,
-                              "description": "$description"
-                            }
-                          }
+                    {
+                      "data": {
+                        "attributes": {
+                          "amount": $amount,
+                          "description": "$description"
                         }
+                      }
+                    }
                     """.trimIndent()
                 )
 
@@ -47,11 +48,16 @@ class PaymentRepositoryImpl : PaymentRepository {
 
                 if (response.isSuccessful && responseBody != null) {
                     val json = JSONObject(responseBody)
-                    val checkoutUrl = json.getJSONObject("data")
-                        .getJSONObject("attributes")
-                        .getString("checkout_url")
+                    val attributes = json.getJSONObject("data").getJSONObject("attributes")
+                    val checkoutUrl = attributes.getString("checkout_url")
+                    val referenceNumber = attributes.getString("reference_number")
 
-                    onResult(Result.success(checkoutUrl))
+                    val result = PaymentLinkResult(
+                        checkoutUrl = checkoutUrl,
+                        referenceNumber = referenceNumber
+                    )
+
+                    onResult(Result.success(result))
                 } else {
                     onResult(Result.failure(Exception("Failed: ${response.code()} - ${responseBody ?: "No response"}")))
                 }
@@ -60,4 +66,5 @@ class PaymentRepositoryImpl : PaymentRepository {
             }
         }
     }
+
 }

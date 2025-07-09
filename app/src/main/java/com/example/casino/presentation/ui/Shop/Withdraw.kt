@@ -103,7 +103,7 @@ fun Withdraw() {
 
         when (updateState) {
             is UiState.Success -> {
-                Toast.makeText(context, "Withdraw Success!", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Withdraw Success!", Toast.LENGTH_SHORT).show()
                 amount = "";
             }
             is UiState.Error -> {

@@ -1,5 +1,8 @@
 package com.example.casino.presentation.ui.Shop
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,12 +45,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casino.R
 import com.example.casino.data.model.TopUp
+import com.example.casino.data.repository.FirebasePaymentLogger
+import com.example.casino.data.repository.PaymentRepositoryImpl
 import com.example.casino.data.repository.UserRepositoryImpl
+import com.example.casino.domain.usecase.CreatePaymentLinkUseCase
 import com.example.casino.domain.usecase.ObserveUserDataUseCase
 import com.example.casino.domain.usecase.TransactionHistoryUseCase
 import com.example.casino.domain.usecase.UpdateUserFieldUseCase
 import com.example.casino.presentation.viewmodel.BalanceViewModel
 import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
+import com.example.casino.presentation.viewmodel.PaymentViewModel
 import com.example.casino.ui.theme.darkPageBackground
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.utils.DataStoreManager
@@ -85,7 +92,7 @@ fun TopUp(
 
         when (updateState) {
             is UiState.Success -> {
-                Toast.makeText(context, "Balance updated!", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Balance updated!", Toast.LENGTH_SHORT).show()
             }
             is UiState.Error -> {
                 Toast.makeText(context, updateState.message, Toast.LENGTH_SHORT).show()
@@ -95,6 +102,14 @@ fun TopUp(
 
         delay(1000)
         balanceViewModel.resetUpdateBalanceState()
+    }
+
+    // PayMongo Link
+    val viewModel = remember {
+        PaymentViewModel(
+            CreatePaymentLinkUseCase(PaymentRepositoryImpl()),
+            FirebasePaymentLogger()
+        )
     }
 
     Box(
@@ -124,7 +139,7 @@ fun TopUp(
                     )
                 }
 
-                ShopUI(fontFamily, balanceViewModel, uid)
+                ShopUI(fontFamily, balanceViewModel, uid, viewModel, context)
             }
 
 
@@ -144,10 +159,10 @@ fun TopUp(
 
 val topUpItems = listOf(
     TopUp(
-        50.00
+        100.00
     ),
     TopUp(
-        100.00
+        150.00
     ),
     TopUp(
         200.00
@@ -168,7 +183,9 @@ val topUpItems = listOf(
 fun ShopUI(
     fontFamily: FontFamily,
     balanceViewModel: BalanceViewModel,
-    uid: String?
+    uid: String?,
+    viewModel: PaymentViewModel,
+    context: Context
 ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -237,7 +254,19 @@ fun ShopUI(
                                 .clip(RoundedCornerShape(50.dp))
                                 .background(Color(0xFF2F2FFD))
                                 .clickable {
-                                    uid?.let { balanceViewModel.updateUserBalance(it, item.amound) }
+                                    val centavos = ((item.amound) * 100).toInt()
+                                    if (uid != null && centavos > 0) {
+                                        viewModel.createPayment(uid!!, centavos, "Payment") { result ->
+                                            result.onSuccess { url ->
+                                                uid?.let { balanceViewModel.updateUserBalance(it, item.amound) }
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                                context.startActivity(intent)
+                                            }.onFailure {
+                                                Toast.makeText(context, "Something went wrong, try again", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+
                                 },
                         ) {
                             Text(

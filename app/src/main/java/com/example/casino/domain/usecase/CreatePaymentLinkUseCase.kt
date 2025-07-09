@@ -1,5 +1,6 @@
 package com.example.casino.domain.usecase
 
+import com.example.casino.data.model.PaymentLinkResult
 import com.example.casino.domain.repository.PaymentRepository
 
 class CreatePaymentLinkUseCase(
@@ -8,8 +9,10 @@ class CreatePaymentLinkUseCase(
     suspend operator fun invoke(
         amount: Int,
         description: String,
-        onResult: (Result<String>) -> Unit
+        onResult: (Result<PaymentLinkResult>) -> Unit
     ) {
         repository.createPaymentLink(amount, description, onResult)
     }
 }
+
+

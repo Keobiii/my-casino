@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,19 +24,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.casino.data.repository.FirebasePaymentLogger
 import com.example.casino.data.repository.PaymentRepositoryImpl
 import com.example.casino.domain.usecase.CreatePaymentLinkUseCase
 import com.example.casino.presentation.viewmodel.PaymentViewModel
+import com.example.casino.utils.DataStoreManager
 import com.example.casino.utils.UiState
 
 @Composable
 fun PayScreen() {
     val context = LocalContext.current
+    val dataStoreManager = remember { DataStoreManager(context) }
+    val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
 
-    // Setup ViewModel manually
     val viewModel = remember {
         PaymentViewModel(
-            CreatePaymentLinkUseCase(PaymentRepositoryImpl())
+            CreatePaymentLinkUseCase(PaymentRepositoryImpl()),
+            FirebasePaymentLogger()
         )
     }
 
@@ -60,10 +65,10 @@ fun PayScreen() {
         Button(
             onClick = {
                 val centavos = ((amount.toDoubleOrNull() ?: 0.0) * 100).toInt()
-                if (centavos > 0) {
+                if (uid != null && centavos > 0) {
                     isLoading = true
                     error = null
-                    viewModel.createPayment(centavos, "Payment") { result ->
+                    viewModel.createPayment(uid!!, centavos, "Payment") { result ->
                         isLoading = false
                         result.onSuccess { url ->
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
