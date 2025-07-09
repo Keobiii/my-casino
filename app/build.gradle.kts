@@ -115,4 +115,7 @@ dependencies {
     // Lifecycle ViewModel & LiveData
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
+
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("androidx.webkit:webkit:1.8.0")
 }

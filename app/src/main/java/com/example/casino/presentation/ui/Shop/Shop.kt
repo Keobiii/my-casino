@@ -36,7 +36,7 @@ fun Shop(
 ) {
     val tabItems = listOf(
         Shop_TabItem("Top Up", page = {
-            TopUp(fontFamily)
+            PayScreen()
         }),
         Shop_TabItem("Withdraw", page = {
             Withdraw()
