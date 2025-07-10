@@ -26,6 +26,7 @@ package com.example.casino.presentation.ui.GameUI
 //import androidx.compose.ui.unit.dp
 //import androidx.constraintlayout.compose.ConstraintLayout
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -54,9 +55,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +70,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -83,11 +87,21 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.layoutId
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casino.utils.CustomCardDialog
 import com.example.casino.R
+import com.example.casino.data.repository.UserRepositoryImpl
+import com.example.casino.domain.usecase.ObserveUserDataUseCase
+import com.example.casino.domain.usecase.TransactionHistoryUseCase
+import com.example.casino.domain.usecase.UpdateUserFieldUseCase
+import com.example.casino.presentation.viewmodel.BalanceViewModel
+import com.example.casino.presentation.viewmodel.BalanceViewModelFactory
 import com.example.casino.ui.theme.eggGray
 import com.example.casino.ui.theme.pageBackground
 import com.example.casino.ui.theme.yelloowww
+import com.example.casino.utils.DataStoreManager
+import com.example.casino.utils.UiState
+import kotlinx.coroutines.delay
 
 fun getCustomRandomImages(image1: Int, image2: Int, count1: Int, count2: Int): List<Int> {
     // Creating a new list
@@ -112,14 +126,56 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
     var totalBomb by remember { mutableStateOf(5) }
 
     var betVal by remember { mutableStateOf("0") }
+    var betValue by remember { mutableStateOf("0") }
 
     var showDialog by remember { mutableStateOf(false) }
 
-    var enableClick by remember { mutableStateOf(true) }
+    var enableClick by remember { mutableStateOf(false) }
 
     val revealedList = remember(resetTrigger) { mutableStateListOf<Boolean>().apply {
         addAll(List(imageResList.size) { false })
     } }
+
+    val context = LocalContext.current
+    val dataStoreManager = DataStoreManager(context)
+
+    val uid by dataStoreManager.getUserUid().collectAsState(initial = null)
+
+    // Initialize ViewModel
+    val repository = UserRepositoryImpl()
+    val updateUserFieldUseCase = UpdateUserFieldUseCase(repository)
+    val balanceViewModel: BalanceViewModel = viewModel(
+        factory = BalanceViewModelFactory(
+            observeUserDataUseCase = ObserveUserDataUseCase(repository),
+            updateUserFieldUseCase = UpdateUserFieldUseCase(repository),
+            transactionHistoryUseCase = TransactionHistoryUseCase(updateUserFieldUseCase)
+        )
+    )
+
+    LaunchedEffect(uid) {
+        uid?.let { balanceViewModel.startObservingUser(it) }
+    }
+
+    val updateState = balanceViewModel.updateBalanceState
+
+
+    LaunchedEffect(updateState) {
+        if (updateState == UiState.Idle) return@LaunchedEffect
+
+        when (updateState) {
+            is UiState.Success -> {
+//                Toast.makeText(context, "Withdraw Success!", Toast.LENGTH_SHORT).show()
+
+            }
+            is UiState.Error -> {
+                Toast.makeText(context, updateState.message, Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
+        }
+
+        delay(1000)
+        balanceViewModel.resetUpdateBalanceState()
+    }
 
 
     fun onReveal(imageRes: Int) {
@@ -136,13 +192,26 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
 
     // Reset when all bombs are found
     fun resetGame() {
+        val amountInput = betVal.toDoubleOrNull()
+
+        if (amountInput == null || amountInput == 0.0) {
+            Toast.makeText(context, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val betAmount = amountInput * -1;
+        uid?.let { balanceViewModel.updateUserBalance(it, betAmount) }
+        betValue = amountInput.toString();
+
         bombCount = 0
         diamondCount = 0
         totalBomb = 5
         imageResList = getCustomRandomImages(R.drawable.diamond, R.drawable.bomb, 20, 5)
         resetTrigger++
         enableClick = true
+        betVal = "0";
     }
+
 
     if (showDialog) {
         CustomCardDialog(
@@ -155,7 +224,26 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
 
     // Trigger the dialog when conditions are met
     LaunchedEffect(bombCount, diamondCount) {
-        if (bombCount == 5 || diamondCount == 20) {
+        if (diamondCount == 20) {
+            val amountInput = betValue.toDoubleOrNull()
+            val prizeAmount = amountInput?.times(2);
+            uid?.let {
+                if (prizeAmount != null) {
+                    balanceViewModel.updateUserBalance(it, prizeAmount)
+                }
+            }
+
+            betVal = "0";
+            betValue = "0"
+            showDialog = true
+            enableClick = false
+
+        }
+
+        if (bombCount == 5 ) {
+
+            betVal = "0";
+            betValue = "0"
             showDialog = true
             enableClick = false
 
@@ -164,9 +252,11 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
         }
     }
 
+
+
     val constraints = ConstraintSet {
         val headerContent = createRefFor("headerContent")
-        val headMainContent = createRefFor("headMainContent")
+        val headMainContent  = createRefFor("headMainContent")
         val mainContent = createRefFor("mainContent")
         val belowMain = createRefFor("belowMain")
         val footerContent = createRefFor("footerContent")
@@ -221,24 +311,6 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-//            Box(
-//                modifier = Modifier.fillMaxWidth(0.3f)
-//            ) {
-//                Image(
-//                    painter = painterResource(id = R.drawable.diamong_strike),
-//                    contentDescription = "",
-//                    contentScale = ContentScale.Crop
-//                )
-//            }
-
-//            Text(
-//
-//                text = title,
-//                fontSize = 22.sp,
-//                fontFamily = fontFamily,
-//                fontWeight = FontWeight.Bold,
-//                color = MaterialTheme.colorScheme.onBackground
-//            )
             Text(
                 text = buildAnnotatedString {
                     withStyle(
@@ -425,21 +497,15 @@ fun GameOneUI(index: Int, fontFamily: FontFamily, title: String) {
 //                        fontSize = 16.sp,
 //                        fontWeight = FontWeight.Bold
 //                    )
-                    BasicTextField(
-                        modifier = Modifier.clip(RoundedCornerShape(10.dp)).fillMaxWidth().background(
-                            Color.Black),
+
+                    OutlinedTextField(
                         value = betVal,
-                        onValueChange = { betVal = it },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textStyle = TextStyle(
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = fontFamily,
-                            textAlign = TextAlign.Center
-                        )
+                        onValueChange = { value ->
+                            betVal = value
+                        }
                     )
+
+
                 }
             }
 
